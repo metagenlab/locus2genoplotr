@@ -313,135 +313,42 @@ class Locus2genoplotR():
         import rpy2.robjects.numpy2ri
         rpy2.robjects.numpy2ri.activate()
         import rpy2.robjects.numpy2ri as numpy2ri
+        from Bio.Graphics import GenomeDiagram
+	from Bio import SeqIO
+
+	record = SeqIO.read(genbank, "genbank")
 
         #robjects.r.assign('df3', com.convert_to_r_dataframe(table_comparison))
 
-        robjects.r('''
-        genbank_list <- list()
-        blast_list <- list()
-        ''')
-        robjects.r.assign('genbank_record', genbank)
-        robjects.r.assign('names', [name])
+	gd_diagram = GenomeDiagram.Diagram("test",y=0.15)
+	gd_track_for_features = gd_diagram.new_track(1, name="Annotated Features")
+	gd_feature_set = gd_track_for_features.new_set()
+	for feature in record.features:
+	    if feature.type == "CDS":
+	        if len(gd_feature_set) % 2 == 0:
+		    color = "blue"
+	        else:
+                    color = "blue"
+                #print target_locus
+                if target_locus:
+                    if feature.qualifiers['locus_tag'][0] == target_locus:
+                        color = "red"
+	    elif feature.type =="tRNA":
+                color = "orange"
+            elif feature.type =="rRNA":
+                color = "pink"
+            else:
+                print feature.type
+                continue
+	    gd_feature_set.add_feature(feature, sigil="ARROW", color=color, label=True, label_position="middle",label_strand=1, label_size=12, label_angle=25,arrowshaft_height=0.5)
 
+	hauteur = 200
+	largeur = len(record)/25
+	gd_diagram.draw(format="linear", 
+                        orientation="landscape", pagesize=(hauteur,largeur),
+		        fragments=1, start=0, end=len(record))
+	gd_diagram.write("plasmid_linear.svg", "SVG")
 
-
-
-        if show_labels:
-            print '----------------------------show labels-------------------------------'
-            plot = '''
-                plot_gene_map(dna_segs=dna_seg_list,
-                               main="",
-                               dna_seg_scale=TRUE,
-                               scale=FALSE,
-                               annotations=annots,
-                               annotation_height=0.4,
-                               annotation_cex=0.5)
-            '''
-        else:
-	    print '----------------------------hide labels-------------------------------' 
-            plot = '''
-            plot_gene_map(dna_segs=dna_seg_list,
-                           main="",
-                           dna_seg_scale=TRUE,
-                           scale=FALSE)
-            '''
-
-        if target_locus:
-            robjects.r.assign('target_locus', target_locus)
-
-        robjects.r('''
-            library(genoPlotR)
-            library(Cairo)
-
-            dna_seg_list <- list()
-
-
-
-            dna_seg_list[[1]] <- try(read_dna_seg_from_file(genbank_record, tagsToParse=c("CDS", "assembly_gap", "rRNA", "tRNA")))
-            dna_seg_list[[2]] <- try(read_dna_seg_from_file(genbank_record, tagsToParse=c("CDS", "assembly_gap", "rRNA", "tRNA")))
-	    dna_seg_list[[2]] <- dna_seg_list[[2]][1,]
-            print (class(dna_seg_list[[2]]))
-
-
-            w <- which(dna_seg_list[[1]]$feature=='assembly_gap')
-            dna_seg_list[[1]]$gene_type <- rep("arrows", length(dna_seg_list[[1]]$gene_type))
-            
-            dna_seg_list[[1]]$col <- rep("blue", length(dna_seg_list[[1]]$col))
-            dna_seg_list[[1]]$fill <- rep("blue", length(dna_seg_list[[1]]$fill)) 
-            dna_seg_list[[1]]$lty <- rep(0, length(dna_seg_list[[1]]$lty))
-            dna_seg_list[[1]]$lwd <- rep(2, length(dna_seg_list[[1]]$lwd))
-            #dna_seg_list[[1]]$pch <- rep(3, length(dna_seg_list[[1]]$pch))
-            #dna_seg_list[[1]]$cex <- rep(0.5, length(dna_seg_list[[1]]$cex))
-            dna_seg_list[[1]]$gene_type[w] <- "bars"
-            dna_seg_list[[1]]$col[w] <- "red"
-            dna_seg_list[[1]]$lty[w] <- 1
-            #dna_seg_list[[1]]$proteinid[w] <- ""
-            #dna_seg_list[[1]]$synonym[w] <- ""
-            #dna_seg_list[[1]]$name[w] <- ""
-            w <- which(abs(dna_seg_list[[1]]$length)<20000)
-            dna_seg_list[[1]] <- dna_seg_list[[1]][w,]
-
-            w <- which(dna_seg_list[[1]]$feature=='tRNA')
-            dna_seg_list[[1]]$gene_type[w] <- "bars"
-            dna_seg_list[[1]]$col[w] <- "orange"
-            dna_seg_list[[1]]$lty[w] <- 1
-            #print(head(dna_seg_list[[1]]))
-
-
-            w <- which(dna_seg_list[[1]]$gene=='-')
-            dna_seg_list[[1]]$name[w] <- ""
-
-            if (exists("target_locus")){
-                w <- which(dna_seg_list[[1]]$synonym == target_locus)
-                print("locus match")
-                print(w)
-                dna_seg_list[[1]]$col[w]<- "red"
-                dna_seg_list[[1]]$fill[w]<- "red" 
-            }
-
-            names(dna_seg_list) <- names
-
-
-            example_row <- dna_seg_list[[1]][1,]
-#            #rep_file <- read.table("table.tab", header=FALSE, sep="\t")
-#            #for (i in 1:length(rep_file[,1])){
-#
-#                temp_row <- example_row
-#
-#
-#                temp_row$col <- 'red'
-#                temp_row$gene_type <- 'bars'
-#                #temp_row$name <- rep_file[i,1]
-#                #temp_row$start <- rep_file[i,2]
-#                #temp_row$end <- rep_file[i,2] + rep_file[i,4]
-#                temp_row$lty <- 2
-#
-#                temp_row2 <- example_row
-#                temp_row2$col <- 'red'
-#                temp_row2$gene_type <- 'bars'
-#                #temp_row2$name <- rep_file[i,1]
-#                #temp_row2$start <- rep_file[i,3]
-#                #temp_row2$end <- rep_file[i,3] + rep_file[i,4]
-#                temp_row2$lty <- 2
-#                dna_seg_list[[1]] <- rbind(dna_seg_list[[1]], temp_row,temp_row2)
-#
-#
-#            }
-
-            annots <- lapply(dna_seg_list, function(x){
-               mid <- middle(x)
-               annot <- annotation(x1=mid, text=x$name, rot=30)
-               idx <- grep("^[^B]", annot$text, perl=TRUE)
-               annot #[idx[idx %% 4 == 0],]
-             })
-
-
-            CairoPDF('test2.pdf',height=4,width=12)# 4,14 / 3.8 (yersinia)/2 (oxa)/4 (capsule)
-
-            xlims <- list(c(1,50000), c(1,50000))
-                %s
-            dev.off()
-        ''' % plot)
 
 
     def record2multi_plot(self, genbank_list, blast_file_list, names, show_labels=True):
