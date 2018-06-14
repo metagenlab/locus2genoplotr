@@ -37,7 +37,7 @@ class Locus2genoplotR():
         else:
             print 'wrong input reference'
 
-        self.ref_locus_seqrecord, self.ref_sub_record, self.ref_feature = self.get_target_locus_region(self.query_locus,
+        self.ref_locus_seqrecord, self.ref_sub_record, self.ref_feature, self.region_start, self.region_end = self.get_target_locus_region(self.query_locus,
                                                                                      self.reference_record,
                                                                                      right_side=right_side,
                                                                                      left_side=left_side,
@@ -141,7 +141,7 @@ class Locus2genoplotR():
         if not match:
             return False
         else:
-            return target_record, query_sub_record, match_feature
+            return target_record, query_sub_record, match_feature, region_start, region_end
 
     def blast_target_genbank(self):
         # write target locus to fasta
@@ -208,11 +208,12 @@ class Locus2genoplotR():
             best_hit = B.best_hit_list[0]
             print 'best hit locus:', best_hit[1]
 
-            target_seq, target_sub_record, feature = self.get_target_locus_region(best_hit[1],
+            target_seq, target_sub_record, feature, start, end = self.get_target_locus_region(best_hit[1],
                                                                          rec_list,
                                                                          right_side=self.right_side,
                                                                          left_side=self.left_side,
                                                                          flip_record=False)
+            flip_record = False
 
             '''
             orf_leading_strand_count = 0
@@ -232,11 +233,12 @@ class Locus2genoplotR():
             if (feature.location.strand != self.ref_feature.location.strand):
                 print 'first trial'
                 print feature.location.strand != self.ref_feature.location.strand
-                target_seq, target_sub_record, feature = self.get_target_locus_region(best_hit[1],
+                target_seq, target_sub_record, feature, start, end = self.get_target_locus_region(best_hit[1],
                                                                              rec_list,
                                                                              right_side=self.right_side,
                                                                              left_side=self.left_side,
                                                                              flip_record=True)
+                flip_record = True
 
             print target_sub_record.id, '#############################################################################'
             '''
@@ -252,7 +254,7 @@ class Locus2genoplotR():
             if target_sub_record:
                 self.sub_record_list.append(target_sub_record)
 
-
+        return start, end, flip_record
         #print 'sub record list', self.sub_record_list
 
 
@@ -351,10 +353,20 @@ class Locus2genoplotR():
 
 
 
-    def record2multi_plot(self, genbank_list, blast_file_list, names, show_labels=True):
+    def record2multi_plot(self,
+                          genbank_list,
+                          blast_file_list,
+                          names,
+                          show_labels=True,
+                          depth_file=False,
+                          last_record_start=False,
+                          last_record_end=False,
+                          flipped_record=False,
+                          show_GC_last=True):
 
         import rpy2.robjects as robjects
         import rpy2.robjects.numpy2ri
+        from Bio import SeqIO
         rpy2.robjects.numpy2ri.activate()
         import rpy2.robjects.numpy2ri as numpy2ri
 
@@ -368,10 +380,22 @@ class Locus2genoplotR():
         robjects.r.assign('blast_list', blast_file_list)
         robjects.r.assign('names', names)
 
+        last_seq = SeqIO.read(genbank_list[-1], 'genbank').seq
+        robjects.r.assign('last_seq', str(last_seq))
+        robjects.r.assign('show_GC_last', show_GC_last)
+
+        if depth_file:
+            robjects.r.assign('last_record_start', last_record_start)
+            robjects.r.assign('last_record_end', last_record_end)
+            robjects.r.assign('last_record_flipped', flipped_record)
+            robjects.r.assign('depth_file', depth_file)
+        else:
+            robjects.r.assign('depth_file', False)
+
         if show_labels:
             plot = '''
 
-                plot_gene_map(dna_segs=dna_seg_list,
+                p <- plot_gene_map(dna_segs=dna_seg_list,
                                comparisons=comp_list,
                                main="",
                                dna_seg_scale=TRUE,
@@ -399,11 +423,60 @@ class Locus2genoplotR():
             library(genoPlotR)
             library(Cairo)
             library(squash)
+            library(gridBase)
+            library(seqinr)
+            library(genbankr)
+
+
+            slidingwindowplot <- function(windowsize, inputseq)
+            {
+               starts <- seq(1, length(inputseq)-windowsize, by = windowsize)
+               n <- length(starts)    # Find the length of the vector "starts"
+               chunkGCs <- numeric(n) # Make a vector of the same length as vector "starts", but just containing zeroes
+               for (i in 1:n) {
+                    chunk <- inputseq[starts[i]:(starts[i]+windowsize-1)]
+                    chunkGC <- GC(chunk)
+                    print(chunkGC)
+                    chunkGCs[i] <- chunkGC
+               }
+               plot(starts,chunkGCs,type="l", xaxt='n', ann=F, xaxs="i", yaxs="i")
+               abline(h=GC(inputseq))
+            }
+            
+            
+            if (depth_file != FALSE) {
+            
+
+                
+                depth_data <- read.table(depth_file, header=F)$V3
+                
+                if (last_record_flipped == TRUE){
+                print('YES')
+                    depth_data <- rev(depth_data)
+                }else{
+                print('NO')
+                }
+                depth_subset <- depth_data[as.numeric(last_record_start):as.numeric(last_record_end)]
+            }else{
+             print('NODEPTH')
+
+            }
+            
+            if (depth_file != FALSE || show_GC_last != FALSE){
+            print ('################# add viewport!!!!!!!!!!!!!!!!!')
+                # for viewport and pdf dimension
+                second_plot_height <- 0.6 
+                pdf_height_scale <- 2.5#2.5            
+            }else{
+                 second_plot_height <- 0.1  
+                 pdf_height_scale <- 2 
+            }
 
             dna_seg_list <- list()
             for (i in 1:length(genbank_list)){
                 print(genbank_list[[i]])
                 dna_seg_list[[i]] <- try(read_dna_seg_from_file(genbank_list[[i]], tagsToParse=c("CDS", "assembly_gap", "rRNA", "tRNA")))
+                
 
 
 
@@ -512,17 +585,19 @@ class Locus2genoplotR():
                annot #[idx[idx %% 4 == 0],]
              })
 
-            height <- length(blast_list)*1.5
-            len_kb <- (dna_seg_list[[1]]$end[length(dna_seg_list[[1]]$end)] - dna_seg_list[[1]]$start[1])/1000
+            height <- length(blast_list)*pdf_height_scale
+            len_seq <- (dna_seg_list[[1]]$end[length(dna_seg_list[[1]]$end)] - dna_seg_list[[1]]$start[1])
+            len_kb <- len_seq/1000
             width <- len_kb/2
-
+            print (height)
+            print (width)
             CairoPDF('test2.pdf',height=height,width=10)# 4,14 / 3.8 (yersinia)/2 (oxa)
 
             xlims <- list(c(1,50000), c(1,50000))
                 plot.new()
-		
-		pushViewport(viewport(layout=grid.layout(2,1,
-		                      heights=unit(c(1,0.1), rep("null", 2))),
+
+		    pushViewport(viewport(layout=grid.layout(2,1,
+		                      heights=unit(c(1,second_plot_height), rep("null", 2))), # 0.1
 		                      name="overall_vp"))
                 pushViewport(viewport(layout.pos.row=1, name="panelA"))
                 %s
@@ -530,6 +605,31 @@ class Locus2genoplotR():
                 pushViewport(viewport(layout.pos.row=2, name="panelB"))
                 hkey(map)
                 upViewport()
+                
+                if (depth_file != FALSE) {
+                    pushViewport(viewport(layout.pos.row=2, name="panelC"))
+                    par(new=TRUE, fig=gridFIG(), las=1,mar=c(5, (length(unlist(strsplit("K. penumoniae 1", "")))/2)+0.3, 0, 1.7))
+                    plot(seq(1:length(depth_subset)),depth_subset,type='l',col='light grey', xaxt='n', ann=F, xaxs="i", yaxs="i", ylim=c(0, 3*median(depth_data)))
+                    
+                    mtext("Depth", side=2, line=3)
+                    
+                    xx <- c(seq(1:length(depth_subset)), rev(seq(1:length(depth_subset))))
+                    yy <- yy <- c(rep(0, length(depth_subset)), rev(depth_subset)) 
+                    polygon(xx, yy, col='light grey')
+                    abline(h=median(depth_data), col="red")
+                    axis(1, at = seq(0, length(depth_subset), 10000), labels = seq(0, length(depth_subset), 10000)/1000, las=2)
+                    upViewport()
+                }
+               
+                if (show_GC_last != FALSE) {
+                    pushViewport(viewport(layout.pos.row=2, name="panelC"))
+                    par(new=TRUE, fig=gridFIG(), las=1,mar=c(5, (length(unlist(strsplit("K. penumoniae 2", "")))/2)+0.3, 0, 2.0)) 
+                    myseq <- unlist(strsplit(last_seq, ""))
+                    slidingwindowplot(500, myseq)
+                    # ,xlab="Nucleotide start position",ylab="GC content"
+                    axis(1, at = seq(0, length(myseq), 10000), labels = seq(0, length(myseq), 10000)/1000, las=2)
+                    upViewport()                
+                }
 
             dev.off()
         ''' % plot)
@@ -548,6 +648,7 @@ if __name__ == '__main__':
     parser.add_argument("-rs",'--right_side_window', type=int, help="right side window")
     parser.add_argument("-i",'--min_identity', type=int, help="minimum identity for blast", default=50)
     parser.add_argument("-sl",'--show_labels', action="store_false", help="do not show show labels")
+    parser.add_argument("-s", '--samtools_depth', default=False, help="add depth plot from samtool depth (only for the last query). Should match the chromosome/contig names of the gbk.")
     parser.add_argument("-x",'--tblastx', action="store_true", help="execute tblastx and not blasn (6 frame translations)")
 
 
@@ -559,10 +660,10 @@ if __name__ == '__main__':
                         left_side=args.left_side_window,
                         right_side=args.right_side_window,
                         tblastx=args.tblastx)
-
+    print 'init ok'
     if args.query:
-        L.blast_target_genbank()
-
+        start, end, flip_record = L.blast_target_genbank()
+        print 'loc', start, end
 
         all_records = [L.ref_sub_record] + L.sub_record_list
         names = [record.description for record in all_records]
@@ -579,7 +680,14 @@ if __name__ == '__main__':
         blast_result_files = L.record_list2blast(all_records, args.min_identity)
         gbk_list = L.write_genbank_subrecords(all_records)
         print 'gbks', gbk_list
-        L.record2multi_plot(gbk_list, blast_result_files, names, args.show_labels)
+        L.record2multi_plot(gbk_list,
+                            blast_result_files,
+                            names,
+                            args.show_labels,
+                            last_record_start=start,
+                            last_record_end=end,
+                            flipped_record=flip_record,
+                            depth_file=args.samtools_depth)
     else:
         print "single plot"
         gbk_list = L.write_genbank_subrecords([L.ref_sub_record])
