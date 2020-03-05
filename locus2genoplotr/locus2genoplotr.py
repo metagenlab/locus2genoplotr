@@ -1,6 +1,4 @@
-#!/usr/bin/python
-
-import rpy2.robjects.numpy2ri
+#!/usr/bin/env python
 
 import numpy as np
 import rpy2.robjects as robjects
@@ -69,7 +67,7 @@ class Locus2genoplotR():
             #    flip_record=True
             #    print 'match!-----------------------------------------------------'
             if flip_record:
-                print ('flipping record', record.id)
+                #print ('flipping record', record.id)
                 name = record.description
                 tmp_name = re.sub(', whole genome shotgun sequence.','', name)
                 tmp_name = re.sub('strain ','', tmp_name)
@@ -151,16 +149,16 @@ class Locus2genoplotR():
         #    read blast => keep best hit in memory
         from tempfile import NamedTemporaryFile
         from Bio import SeqRecord, SeqIO
-        import StringIO
+        from io import StringIO
         import gbk2faa
-        import blast_utils
+        from TPutils import blast_utils
 
         self.record_id2best_blast_locus_tag = {}
         self.accession2record = {}
         self.record_order = []
 
-        temp_ref = NamedTemporaryFile(delete=False)
-        fastastr = StringIO.StringIO()
+        temp_ref = NamedTemporaryFile(delete=False, mode='w')
+        fastastr = StringIO()
 
         SeqIO.write(self.ref_locus_seqrecord, fastastr, 'fasta')
 
@@ -192,8 +190,8 @@ class Locus2genoplotR():
             else:
                 raise IOError('wrong target gbk format')
 
-            temp_target = NamedTemporaryFile(delete=False)
-            fastastr = StringIO.StringIO()
+            temp_target = NamedTemporaryFile(delete=False, mode='w')
+            fastastr = StringIO()
 
             gbk2faa.gbk2faa(rec_list, lformat=True, output_handle=fastastr)
             #SeqIO.write(rec_list, fastastr, 'fasta')
@@ -260,14 +258,14 @@ class Locus2genoplotR():
 
     def write_genbank_subrecords(self, subrecord_list):
         from tempfile import NamedTemporaryFile
-        import StringIO
+        from io import StringIO
 
         out_names = []
 
         for record in subrecord_list:
 
-            temp_ref = NamedTemporaryFile(delete=False)
-            fastastr = StringIO.StringIO()
+            temp_ref = NamedTemporaryFile(delete=False, mode='w')
+            fastastr = StringIO()
 
             SeqIO.write(record, fastastr, 'genbank')
 
@@ -285,7 +283,7 @@ class Locus2genoplotR():
 
         blast_result_files = []
 
-        import blast_utils
+        from TPutils import blast_utils
 
         for i in range(0, len(record_list)-1):
             # write fasta nucl to temp files
@@ -309,48 +307,51 @@ class Locus2genoplotR():
     def record_list2promer(self):
         pass
 
-    def record2single_plot(self, genbank, name, show_labels=True, target_locus=False):
+    def record2single_plot(self, 
+                           genbank, 
+                           name, 
+                           show_labels=True, 
+                           target_locus=False,
+                           output_name="single_plot"):
 
         import rpy2.robjects as robjects
-        import rpy2.robjects.numpy2ri
-        rpy2.robjects.numpy2ri.activate()
         import rpy2.robjects.numpy2ri as numpy2ri
+        numpy2ri.activate()
         from Bio.Graphics import GenomeDiagram
-	from Bio import SeqIO
+        from Bio import SeqIO
 
-	record = SeqIO.read(genbank, "genbank")
+        record = SeqIO.read(genbank, "genbank")
 
         #robjects.r.assign('df3', com.convert_to_r_dataframe(table_comparison))
 
-	gd_diagram = GenomeDiagram.Diagram("test",y=0.15)
-	gd_track_for_features = gd_diagram.new_track(1, name="Annotated Features")
-	gd_feature_set = gd_track_for_features.new_set()
-	for feature in record.features:
-	    if feature.type == "CDS":
-	        if len(gd_feature_set) % 2 == 0:
-		    color = "blue"
-	        else:
+        gd_diagram = GenomeDiagram.Diagram("test",y=0.15)
+        gd_track_for_features = gd_diagram.new_track(1, name="Annotated Features")
+        gd_feature_set = gd_track_for_features.new_set()
+        for feature in record.features:
+            if feature.type == "CDS":
+                if len(gd_feature_set) % 2 == 0:
                     color = "blue"
-                #print target_locus
+                else:
+                        color = "blue"
+                    #print target_locus
                 if target_locus:
                     if feature.qualifiers['locus_tag'][0] == target_locus:
                         color = "red"
-	    elif feature.type =="tRNA":
+            elif feature.type =="tRNA":
                 color = "orange"
             elif feature.type =="rRNA":
                 color = "pink"
             else:
                 print(feature.type)
                 continue
-	    gd_feature_set.add_feature(feature, sigil="ARROW", color=color, label=True, label_position="middle",label_strand=1, label_size=12, label_angle=25,arrowshaft_height=0.5)
+            gd_feature_set.add_feature(feature, sigil="ARROW", color=color, label=True, label_position="middle",label_strand=1, label_size=12, label_angle=25,arrowshaft_height=0.5)
 
-	hauteur = 200
-	largeur = len(record)/25
-	gd_diagram.draw(format="linear", 
-                        orientation="landscape", pagesize=(hauteur,largeur),
-		        fragments=1, start=0, end=len(record))
-	gd_diagram.write("plasmid_linear.svg", "SVG")
-
+        hauteur = 200
+        largeur = len(record)/25
+        gd_diagram.draw(format="linear", 
+                            orientation="landscape", pagesize=(hauteur,largeur),
+                    fragments=1, start=0, end=len(record))
+        gd_diagram.write(f"{output_name}.svg", "SVG")
 
 
     def record2multi_plot(self,
@@ -362,13 +363,12 @@ class Locus2genoplotR():
                           last_record_start=False,
                           last_record_end=False,
                           flipped_record=False,
-                          show_GC_last=True):
+                          show_GC_last=False):
 
         import rpy2.robjects as robjects
-        import rpy2.robjects.numpy2ri
-        from Bio import SeqIO
-        rpy2.robjects.numpy2ri.activate()
         import rpy2.robjects.numpy2ri as numpy2ri
+        from Bio import SeqIO
+        numpy2ri.activate()
 
         #robjects.r.assign('df3', com.convert_to_r_dataframe(table_comparison))
 
@@ -394,13 +394,12 @@ class Locus2genoplotR():
 
         if show_labels:
             plot = '''
-
                 p <- plot_gene_map(dna_segs=dna_seg_list,
                                comparisons=comp_list,
                                main="",
                                dna_seg_scale=TRUE,
                                scale=TRUE,
-                               global_color_scheme=c("per_id", "increasing", "grey", 0.99),
+                               global_color_scheme=c("per_id", "increasing", "grey", 1),
                                annotations=annots, 
                                annotation_height=0.4, 
                                annotation_cex=0.5,
@@ -415,17 +414,17 @@ class Locus2genoplotR():
                           dna_seg_scale=TRUE,
                           scale=TRUE,
                           override_color_schemes=TRUE,
-                          global_color_scheme=c("per_id", "increasing", "grey", 0.99),
+                          global_color_scheme=c("per_id", "increasing", "grey", 1),
                           plot_new=FALSE)
             '''
 
         robjects.r('''
-            library(genoPlotR)
-            library(Cairo)
-            library(squash)
-            library(gridBase)
-            library(seqinr)
-            library(genbankr)
+            library(genoPlotR, quietly = TRUE)
+            library(Cairo, quietly = TRUE)
+            library(squash, quietly = TRUE)
+            library(gridBase, quietly = TRUE)
+            library(seqinr, quietly = TRUE)
+            library(genbankr, quietly = TRUE)
 
 
             slidingwindowplot <- function(windowsize, inputseq)
@@ -436,7 +435,6 @@ class Locus2genoplotR():
                for (i in 1:n) {
                     chunk <- inputseq[starts[i]:(starts[i]+windowsize-1)]
                     chunkGC <- GC(chunk)
-                    print(chunkGC)
                     chunkGCs[i] <- chunkGC
                }
                plot(starts,chunkGCs,type="l", xaxt='n', ann=F, xaxs="i", yaxs="i")
@@ -474,7 +472,7 @@ class Locus2genoplotR():
 
             dna_seg_list <- list()
             for (i in 1:length(genbank_list)){
-                print(genbank_list[[i]])
+                #print(genbank_list[[i]])
                 dna_seg_list[[i]] <- try(read_dna_seg_from_file(genbank_list[[i]], tagsToParse=c("CDS", "assembly_gap", "rRNA", "tRNA")))
                 
 
@@ -485,7 +483,7 @@ class Locus2genoplotR():
                 dna_seg_list[[i]]$gene_type <- rep("arrows", length(dna_seg_list[[i]]$gene_type))
                 
                 dna_seg_list[[i]]$col <- rep("cadetblue1", length(dna_seg_list[[i]]$col))
-		dna_seg_list[[i]]$fill <- rep("blue", length(dna_seg_list[[i]]$fill))
+		        dna_seg_list[[i]]$fill <- rep("blue", length(dna_seg_list[[i]]$fill))
                 dna_seg_list[[i]]$lty <- rep(0, length(dna_seg_list[[i]]$lty))
                 dna_seg_list[[i]]$lwd <- rep(2, length(dna_seg_list[[i]]$lwd))
                 #dna_seg_list[[i]]$pch <- rep(3, length(dna_seg_list[[i]]$pch))
@@ -503,7 +501,7 @@ class Locus2genoplotR():
                 dna_seg_list[[i]]$gene_type[w] <- "bars"
                 dna_seg_list[[i]]$col[w] <- "orange"
                 dna_seg_list[[i]]$lty[w] <- 1
-		#print(head(dna_seg_list[[i]]))	
+		        #print(head(dna_seg_list[[i]]))	
 
 
                 w <- which(dna_seg_list[[i]]$gene=='-')
@@ -564,12 +562,11 @@ class Locus2genoplotR():
 
             breaks <- c(0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
             col <- grey(breaks)
-            transparency <- 0.99
+            transparency <- 0.9
             tpc <- floor(transparency*256)
             tpc <- sprintf("%%X", tpc)
             if (nchar(tpc) == 1) tpc <- paste("0", tpc, sep="")
             col <- paste(col, tpc, sep="")
-
             # color map
             map <- makecmap(sort(unique(rng)), n=10)
             map$colors<-col
@@ -589,47 +586,49 @@ class Locus2genoplotR():
             len_seq <- (dna_seg_list[[1]]$end[length(dna_seg_list[[1]]$end)] - dna_seg_list[[1]]$start[1])
             len_kb <- len_seq/1000
             width <- len_kb/2
-            print (height)
-            print (width)
+            #print("dimensions:")
+            #print (height)
+            #print (width)
+            
             CairoPDF('test2.pdf',height=height,width=10)# 4,14 / 3.8 (yersinia)/2 (oxa)
 
-            xlims <- list(c(1,50000), c(1,50000))
+                xlims <- list(c(1,50000), c(1,50000))
                 plot.new()
 
-		    pushViewport(viewport(layout=grid.layout(2,1,
-		                      heights=unit(c(1,second_plot_height), rep("null", 2))), # 0.1
-		                      name="overall_vp"))
-                pushViewport(viewport(layout.pos.row=1, name="panelA"))
-                %s
-                upViewport()
-                pushViewport(viewport(layout.pos.row=2, name="panelB"))
-                hkey(map)
-                upViewport()
-                
-                if (depth_file != FALSE) {
-                    pushViewport(viewport(layout.pos.row=2, name="panelC"))
-                    par(new=TRUE, fig=gridFIG(), las=1,mar=c(5, (length(unlist(strsplit("K. penumoniae 1", "")))/2)+0.3, 0, 1.7))
-                    plot(seq(1:length(depth_subset)),depth_subset,type='l',col='light grey', xaxt='n', ann=F, xaxs="i", yaxs="i", ylim=c(0, 3*median(depth_data)))
-                    
-                    mtext("Depth", side=2, line=3)
-                    
-                    xx <- c(seq(1:length(depth_subset)), rev(seq(1:length(depth_subset))))
-                    yy <- yy <- c(rep(0, length(depth_subset)), rev(depth_subset)) 
-                    polygon(xx, yy, col='light grey')
-                    abline(h=median(depth_data), col="red")
-                    axis(1, at = seq(0, length(depth_subset), 10000), labels = seq(0, length(depth_subset), 10000)/1000, las=2)
+                pushViewport(viewport(layout=grid.layout(2,1,
+                                heights=unit(c(1, second_plot_height), rep("null", 2))), # 0.1
+                                name="overall_vp"))
+                    pushViewport(viewport(layout.pos.row=1, name="panelA"))
+                    %s
                     upViewport()
-                }
-               
-                if (show_GC_last != FALSE) {
-                    pushViewport(viewport(layout.pos.row=2, name="panelC"))
-                    par(new=TRUE, fig=gridFIG(), las=1,mar=c(5, (length(unlist(strsplit("K. penumoniae 2", "")))/2)+0.3, 0, 2.0)) 
-                    myseq <- unlist(strsplit(last_seq, ""))
-                    slidingwindowplot(500, myseq)
-                    # ,xlab="Nucleotide start position",ylab="GC content"
-                    axis(1, at = seq(0, length(myseq), 10000), labels = seq(0, length(myseq), 10000)/1000, las=2)
-                    upViewport()                
-                }
+                    pushViewport(viewport(layout.pos.row=2, name="panelB"))
+                    hkey(map)
+                    upViewport()
+                    
+                    if (depth_file != FALSE) {
+                        pushViewport(viewport(layout.pos.row=2, name="panelC"))
+                        par(new=TRUE, fig=gridFIG(), las=1,mar=c(5, (length(unlist(strsplit("K. penumoniae 1", "")))/2)+0.3, 0, 1.7))
+                        plot(seq(1:length(depth_subset)),depth_subset,type='l',col='light grey', xaxt='n', ann=F, xaxs="i", yaxs="i", ylim=c(0, 3*median(depth_data)))
+                        
+                        mtext("Depth", side=2, line=3)
+                        
+                        xx <- c(seq(1:length(depth_subset)), rev(seq(1:length(depth_subset))))
+                        yy <- yy <- c(rep(0, length(depth_subset)), rev(depth_subset)) 
+                        polygon(xx, yy, col='light grey')
+                        abline(h=median(depth_data), col="red")
+                        axis(1, at = seq(0, length(depth_subset), 10000), labels = seq(0, length(depth_subset), 10000)/1000, las=2)
+                        upViewport()
+                    }
+                
+                    if (show_GC_last != FALSE) {
+                        pushViewport(viewport(layout.pos.row=2, name="panelC"))
+                        par(new=TRUE, fig=gridFIG(), las=1,mar=c(5, (length(unlist(strsplit("K. penumoniae 2", "")))/2)+0.3, 0, 2.0)) 
+                        myseq <- unlist(strsplit(last_seq, ""))
+                        slidingwindowplot(500, myseq)
+                        # ,xlab="Nucleotide start position",ylab="GC content"
+                        axis(1, at = seq(0, length(myseq), 10000), labels = seq(0, length(myseq), 10000)/1000, las=2)
+                        upViewport()                
+                    }
 
             dev.off()
         ''' % plot)
@@ -644,8 +643,9 @@ if __name__ == '__main__':
     parser.add_argument("-l",'--locus', type=str, help="locus_tag")
     parser.add_argument("-r",'--reference', type=str, help="reference genbank")
     parser.add_argument("-q",'--query', type=str, help="target genbank(s)", nargs='+')
-    parser.add_argument("-ls",'--left_side_window', type=int, help="left siden window")
-    parser.add_argument("-rs",'--right_side_window', type=int, help="right side window")
+    parser.add_argument("-o",'--output_name', help="output name", default='out')
+    parser.add_argument("-ls",'--left_side_window', type=int, help="left siden window", default=15000)
+    parser.add_argument("-rs",'--right_side_window', type=int, help="right side window", default=15000)
     parser.add_argument("-i",'--min_identity', type=int, help="minimum identity for blast", default=50)
     parser.add_argument("-sl",'--show_labels', action="store_false", help="do not show show labels")
     parser.add_argument("-s", '--samtools_depth', default=False, help="add depth plot from samtool depth (only for the last query). Should match the chromosome/contig names of the gbk.")
@@ -685,8 +685,13 @@ if __name__ == '__main__':
                             last_record_start=start,
                             last_record_end=end,
                             flipped_record=flip_record,
-                            depth_file=args.samtools_depth)
+                            depth_file=args.samtools_depth,
+                            show_GC_last=False)
     else:
         gbk_list = L.write_genbank_subrecords([L.ref_sub_record])
-        L.record2single_plot(gbk_list[0], 'test', show_labels=args.show_labels, target_locus=args.locus)
+        L.record2single_plot(gbk_list[0], 
+                             'test', 
+                             show_labels=args.show_labels, 
+                             target_locus=args.locus,
+                             output_name=args.output_name)
 
