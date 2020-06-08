@@ -7,7 +7,7 @@ from rpy2.robjects.packages import importr
 import rpy2.rlike.container as rlc
 from rpy2.robjects import r, pandas2ri
 pandas2ri.activate()
-#import pandas.rpy.common as com
+import re
 
 
 class Locus2genoplotR():
