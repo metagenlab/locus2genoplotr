@@ -590,7 +590,7 @@ class Locus2genoplotR():
             #print (height)
             #print (width)
             
-            CairoPDF('test2.pdf',height=height,width=10)# 4,14 / 3.8 (yersinia)/2 (oxa)
+            CairoPDF('test2.pdf',height=height,width=width)# 4,14 / 3.8 (yersinia)/2 (oxa)
 
                 xlims <- list(c(1,50000), c(1,50000))
                 plot.new()
@@ -650,6 +650,7 @@ if __name__ == '__main__':
     parser.add_argument("-sl",'--show_labels', action="store_false", help="do not show show labels")
     parser.add_argument("-s", '--samtools_depth', default=False, help="add depth plot from samtool depth (only for the last query). Should match the chromosome/contig names of the gbk.")
     parser.add_argument("-x",'--tblastx', action="store_true", help="execute tblastx and not blasn (6 frame translations)")
+    parser.add_argument("-g",'--gc_plot', action="store_true", help="Show GC plot")
 
 
     args = parser.parse_args()
@@ -668,7 +669,7 @@ if __name__ == '__main__':
 
 
         for i, name in enumerate(names):
-            tmp_name = re.sub(', complete sequence.','', name)
+            tmp_name = re.sub(',.*','', name)
             tmp_name = re.sub('strain ','', tmp_name)
             tmp_name = re.sub('Klebsiella pneumoniae ','K.p ', tmp_name)
             tmp_name = re.sub(', complete genome.','', tmp_name)
@@ -686,7 +687,7 @@ if __name__ == '__main__':
                             last_record_end=end,
                             flipped_record=flip_record,
                             depth_file=args.samtools_depth,
-                            show_GC_last=False)
+                            show_GC_last=args.gc_plot)
     else:
         gbk_list = L.write_genbank_subrecords([L.ref_sub_record])
         L.record2single_plot(gbk_list[0], 
