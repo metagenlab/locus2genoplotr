@@ -319,7 +319,7 @@ class Locus2genoplotR():
         numpy2ri.activate()
         from Bio.Graphics import GenomeDiagram
         from Bio import SeqIO
-
+        
         record = SeqIO.read(genbank, "genbank")
 
         #robjects.r.assign('df3', com.convert_to_r_dataframe(table_comparison))

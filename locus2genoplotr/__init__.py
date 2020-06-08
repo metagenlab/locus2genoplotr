@@ -15,6 +15,7 @@ def main():
     parser.add_argument("-sl",'--show_labels', action="store_false", help="do not show show labels")
     parser.add_argument("-s", '--samtools_depth', default=False, help="add depth plot from samtool depth (only for the last query). Should match the chromosome/contig names of the gbk.")
     parser.add_argument("-x",'--tblastx', action="store_true", help="execute tblastx and not blasn (6 frame translations)")
+    parser.add_argument("-g",'--gc_plot', action="store_true", help="Show GC plot")
 
 
     args = parser.parse_args()
