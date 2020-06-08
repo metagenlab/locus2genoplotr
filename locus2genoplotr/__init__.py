@@ -20,12 +20,12 @@ def main():
 
     args = parser.parse_args()
 
-    L = Locus2genoplotR(args.locus,
-                        args.reference,
-                        args.query,
-                        left_side=args.left_side_window,
-                        right_side=args.right_side_window,
-                        tblastx=args.tblastx)
+    L = locus2genoplotr.Locus2genoplotR(args.locus,
+                                        args.reference,
+                                        args.query,
+                                        left_side=args.left_side_window,
+                                        right_side=args.right_side_window,
+                                        tblastx=args.tblastx)
 
     if args.query:
         start, end, flip_record = L.blast_target_genbank()
@@ -55,5 +55,8 @@ def main():
                             depth_file=args.samtools_depth)
     else:
         gbk_list = L.write_genbank_subrecords([L.ref_sub_record])
-        L.record2single_plot(gbk_list[0], 'test', show_labels=args.show_labels, target_locus=args.locus)
+        L.record2single_plot(gbk_list[0], 
+                             'test', 
+                             show_labels=args.show_labels, 
+                             target_locus=args.locus)
 
