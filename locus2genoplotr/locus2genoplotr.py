@@ -8,7 +8,7 @@ import rpy2.rlike.container as rlc
 from rpy2.robjects import r, pandas2ri
 pandas2ri.activate()
 import re
-
+from Bio import SeqIO
 
 class Locus2genoplotR():
 
