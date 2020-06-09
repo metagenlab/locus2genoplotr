@@ -2,7 +2,7 @@
 
 # Description
 
-Plot gene or genome maps and comparisons genome plots. Generate *SVG* and *PNG* images with genoPlotR (http://genoplotr.r-forge.r-project.org/) or GenomeDiagram (https://academic.oup.com/bioinformatics/article/22/5/616/205776).
+Plot gene or genome maps and comparisons genome plots. Generate *SVG* and *PDF* images with genoPlotR (http://genoplotr.r-forge.r-project.org/) or GenomeDiagram (https://academic.oup.com/bioinformatics/article/22/5/616/205776).
 
 # Installation
 
@@ -25,14 +25,76 @@ Dependency: [Singularity](https://sylabs.io/guides/3.0/user-guide/installation.h
 singularity build locus2genoplotr.simg docker://metagenlab/locus2genoplotr:1.1
 ```
 
+## Usage
+
+Input files are standard genbank files. The idea is to automatically extract the region flanking a target locus and align it with the most similar region in one or multiple other genomes. 
+
+Mandatory arguments are
+    - one reference genbank file 
+    - a target CDS locus_tag (should be one of the CDS locus_tag of the reference genbank file)
+    - optional: one or multiple additional genbank file(s) for comparison 
+      - the amino acid sequence of the reference CDS will be extracted and blasted against each genbank file to identify the closest homolog in each target genbank file
+      - regions flanking the target locus and the best hit of each target genbank file are aligned with blastn or tblastx
+    - optional: GC or depth plot of the target region (based on the sequence of the last query)
+
+```
+locus2genoplotr.py [-h] [-l LOCUS] [-r REFERENCE]
+                          [-q QUERY [QUERY ...]] [-o OUTPUT_NAME] [-v]
+                          [-ls LEFT_SIDE_WINDOW] [-rs RIGHT_SIDE_WINDOW]
+                          [-i MIN_IDENTITY] [-sl] [-s SAMTOOLS_DEPTH] [-x]
+                          [-g]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -l LOCUS, --locus LOCUS
+                        locus_tag
+  -r REFERENCE, --reference REFERENCE
+                        reference genbank
+  -q QUERY [QUERY ...], --query QUERY [QUERY ...]
+                        target genbank(s)
+  -o OUTPUT_NAME, --output_name OUTPUT_NAME
+                        output name
+  -v, --svg             output svg rather than pdf
+  -ls LEFT_SIDE_WINDOW, --left_side_window LEFT_SIDE_WINDOW
+                        left siden window
+  -rs RIGHT_SIDE_WINDOW, --right_side_window RIGHT_SIDE_WINDOW
+                        right side window
+  -i MIN_IDENTITY, --min_identity MIN_IDENTITY
+                        minimum identity for blast
+  -sl, --show_labels    do not show show labels
+  -s SAMTOOLS_DEPTH, --samtools_depth SAMTOOLS_DEPTH
+                        add depth plot from samtool depth (only for the last
+                        query). Should match the chromosome/contig names of
+                        the gbk.
+  -x, --tblastx         execute tblastx and not blasn (6 frame translations)
+  -g, --gc_plot         Show GC plot
+
+```
+
 ## examples
 
 
 ### simple plot 
 
-![Simple plot](examples/plasmid_linear.svg)
+The script can be used to generate simple svg plots of a single target region
 
-### comparative plot
+```bash
+locus2genoplotr.py -l KL24_00002 -r data/K24.gbk -o single_plot -v
+```
+
+![Simple plot](examples/single_plot.svg)
+
+### increase region size
+
+The region size can be increazed with "left side" (-ls) and "right side" (-rs) arguments.
+
+```bash
+locus2genoplotr.py -l KL24_00002 -r data/K24.gbk -o single_plot -v -rs 45000 
+```
+
+![Simple plot](examples/single_plot_large.svg)
+
+### simple plot : comparative plot
 
 ```bash
 locus2genoplotr -l KL28_00008 -r data/KL28.gbk -q data/capsule_region_150bp_assembly_concat.gbk data/capsule_region_250bp_assembly_concat.gbk -rs 45000 -ls 30000 -o simple_comp -v
