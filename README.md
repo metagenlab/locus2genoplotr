@@ -22,7 +22,10 @@ Dependency: [Singularity](https://sylabs.io/guides/3.0/user-guide/installation.h
 ### build the image 
 
 ```bash
+# build image
 singularity build locus2genoplotr.simg docker://metagenlab/locus2genoplotr:1.1
+# execute
+songularity exec locus2genoplotr.simg locus2genoplotr ...
 ```
 
 ## Usage
