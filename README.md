@@ -27,9 +27,10 @@ singularity build locus2genoplotr.simg docker://metagenlab/locus2genoplotr:1.1
 
 ## Usage
 
-Input files are standard genbank files. The idea is to automatically extract the region flanking a target locus and align it with the most similar region in one or multiple other genomes. 
+Input files are standard genbank files. The idea is to automatically extract the region flanking a target locus and align it with the most similar region in one or multiple other genomes.  
 
-Mandatory arguments are
+Mandatory arguments are:  
+
     - one reference genbank file 
     - a target CDS locus_tag (should be one of the CDS locus_tag of the reference genbank file)
     - optional: one or multiple additional genbank file(s) for comparison 
