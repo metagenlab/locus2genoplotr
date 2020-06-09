@@ -125,3 +125,9 @@ locus2genoplotr -l KL28_00008 -r data/KL28.gbk -q data/capsule_region_150bp_asse
 ```
 
 ![Depth plot](examples/capsule_with_depth.svg)
+
+
+
+# TODO 
+
+- [ ] deal with combined GC and depth plots 
