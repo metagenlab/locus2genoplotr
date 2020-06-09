@@ -39,7 +39,7 @@ Mandatory arguments are:
 
 
 ```
-locus2genoplotr.py [-h] [-l LOCUS] [-r REFERENCE]
+locus2genoplotr [-h] [-l LOCUS] [-r REFERENCE]
                           [-q QUERY [QUERY ...]] [-o OUTPUT_NAME] [-v]
                           [-ls LEFT_SIDE_WINDOW] [-rs RIGHT_SIDE_WINDOW]
                           [-i MIN_IDENTITY] [-sl] [-s SAMTOOLS_DEPTH] [-x]
@@ -80,7 +80,7 @@ optional arguments:
 The script can be used to generate simple svg plots of a single target region
 
 ```bash
-locus2genoplotr.py -l KL24_00002 -r data/K24.gbk -o single_plot -v
+locus2genoplotr -l KL24_00002 -r data/K24.gbk -o single_plot -v
 ```
 
 ![Simple plot](examples/single_plot.svg)
@@ -90,7 +90,7 @@ locus2genoplotr.py -l KL24_00002 -r data/K24.gbk -o single_plot -v
 The region size can be increazed with "left side" (-ls) and "right side" (-rs) arguments.
 
 ```bash
-locus2genoplotr.py -l KL24_00002 -r data/K24.gbk -o single_plot -v -rs 45000 
+locus2genoplotr -l KL24_00002 -r data/K24.gbk -o single_plot -v -rs 45000 
 ```
 
 ![Simple plot](examples/single_plot_large.svg)
@@ -105,7 +105,7 @@ locus2genoplotr -l KL28_00008 -r data/KL28.gbk -q data/capsule_region_150bp_asse
 ### comparative plot tblastx
 
 ```bash
-locus2genoplotr.py -l KL24_00002 -r data/K24.gbk -q data/GCF_001596925.1_ASM159692v1_genomic.gbff data/GCF_000943095.1_ST15_genomic.gbff data/K24.gbk -rs 25000 -ls 3000 -x -o alignment_tblastx
+locus2genoplotr -l KL24_00002 -r data/K24.gbk -q data/GCF_001596925.1_ASM159692v1_genomic.gbff data/GCF_000943095.1_ST15_genomic.gbff data/K24.gbk -rs 25000 -ls 3000 -x -o alignment_tblastx
 ```
 
 ![TblastX plot](examples/alignment_tblastx.svg)
