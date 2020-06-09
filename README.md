@@ -31,7 +31,7 @@ Input files are standard genbank files. The idea is to automatically extract the
 
 Mandatory arguments are:
 - one reference genbank file 
-- a target CDS locus_tag (should be one of the CDS locus_tag of the reference genbank file)
+- a target CDS *locus_tag* (should be one of the CDS locus_tag of the reference genbank file)
 - optional: one or multiple additional genbank file(s) for comparison 
     - the amino acid sequence of the reference CDS will be extracted and blasted against each genbank file to identify the closest homolog in each target genbank file
     - regions flanking the target locus and the best hit of each target genbank file are aligned with blastn or tblastx
