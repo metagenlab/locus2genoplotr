@@ -17,7 +17,9 @@ class Locus2genoplotR():
                  target_genbank_list,
                  left_side=0,
                  right_side=0,
-                 tblastx=False):
+                 tblastx=False,
+                 output_name='out',
+                 svg=False):
 
         from Bio import SeqRecord, SeqIO
         self.query_locus = query_locus
@@ -25,6 +27,13 @@ class Locus2genoplotR():
         self.right_side = right_side
         self.left_side = left_side
         self.tblastx = tblastx
+        
+        if svg:
+            self.output_format = 'SVG'
+            self.output_name = f'{output_name}.svg'
+        else:
+            self.output_format = 'PDF'
+            self.output_name = f'{output_name}.pdf'
 
         if type(reference_genbank) == str:
             self.reference_record = [i for i in SeqIO.parse(open(reference_genbank), 'genbank')]
@@ -63,15 +72,11 @@ class Locus2genoplotR():
         from Bio.SeqRecord import SeqRecord
         match=False
         for record in records:
-            #if record.name in ['NZ_JUBO01000032', 'NZ_JUBO01000028']:
-            #    flip_record=True
-            #    print 'match!-----------------------------------------------------'
             if flip_record:
-                #print ('flipping record', record.id)
+
                 name = record.description
-                tmp_name = re.sub(', whole genome shotgun sequence.','', name)
+                tmp_name = re.sub(',.*','', name)
                 tmp_name = re.sub('strain ','', tmp_name)
-                #tmp_name = re.sub('Klebsiella pneumoniae ','K.p ', tmp_name)
                 tmp_name = re.sub(', complete genome.','', tmp_name)
                 record.description = tmp_name
                 record = record.reverse_complement(id=record.id,
@@ -99,7 +104,6 @@ class Locus2genoplotR():
                         if region_end > len(record.seq):
                             region_end=len(record.seq)
                         print ('extraction from %s to %s' % (region_start, region_end))
-
                         query_sub_record = record[region_start:region_end]
 
                         target_record = SeqRecord(feature.extract(record.seq).translate(),
@@ -253,7 +257,6 @@ class Locus2genoplotR():
                 self.sub_record_list.append(target_sub_record)
 
         return start, end, flip_record
-        #print 'sub record list', self.sub_record_list
 
 
     def write_genbank_subrecords(self, subrecord_list):
@@ -312,7 +315,8 @@ class Locus2genoplotR():
                            name, 
                            show_labels=True, 
                            target_locus=False,
-                           output_name="single_plot"):
+                           output_name="single_plot",
+                           svg=False):
 
         import rpy2.robjects as robjects
         import rpy2.robjects.numpy2ri as numpy2ri
@@ -333,7 +337,6 @@ class Locus2genoplotR():
                     color = "blue"
                 else:
                         color = "blue"
-                    #print target_locus
                 if target_locus:
                     if feature.qualifiers['locus_tag'][0] == target_locus:
                         color = "red"
@@ -342,7 +345,7 @@ class Locus2genoplotR():
             elif feature.type =="rRNA":
                 color = "pink"
             else:
-                print(feature.type)
+                print("Unknown feature type:", feature.type)
                 continue
             gd_feature_set.add_feature(feature, sigil="ARROW", color=color, label=True, label_position="middle",label_strand=1, label_size=12, label_angle=25,arrowshaft_height=0.5)
 
@@ -351,7 +354,10 @@ class Locus2genoplotR():
         gd_diagram.draw(format="linear", 
                             orientation="landscape", pagesize=(hauteur,largeur),
                     fragments=1, start=0, end=len(record))
-        gd_diagram.write(f"{output_name}.svg", "SVG")
+        if svg:
+            gd_diagram.write(f"{output_name}.svg", "SVG")
+        else:
+            gd_diagram.write(f"{output_name}.pdf", "PDF")
 
 
     def record2multi_plot(self,
@@ -443,16 +449,14 @@ class Locus2genoplotR():
             
             
             if (depth_file != FALSE) {
-            
-
-                
+                            
                 depth_data <- read.table(depth_file, header=F)$V3
                 
                 if (last_record_flipped == TRUE){
-                print('YES')
+                    print('YES')
                     depth_data <- rev(depth_data)
                 }else{
-                print('NO')
+                    print('NO')
                 }
                 depth_subset <- depth_data[as.numeric(last_record_start):as.numeric(last_record_end)]
             }else{
@@ -461,7 +465,7 @@ class Locus2genoplotR():
             }
             
             if (depth_file != FALSE || show_GC_last != FALSE){
-            print ('################# add viewport!!!!!!!!!!!!!!!!!')
+            print ('############### add viewport ############')
                 # for viewport and pdf dimension
                 second_plot_height <- 0.6 
                 pdf_height_scale <- 2.5#2.5            
@@ -475,10 +479,6 @@ class Locus2genoplotR():
                 #print(genbank_list[[i]])
                 dna_seg_list[[i]] <- try(read_dna_seg_from_file(genbank_list[[i]], tagsToParse=c("CDS", "assembly_gap", "rRNA", "tRNA")))
                 
-
-
-
-
                 w <- which(dna_seg_list[[i]]$feature=='assembly_gap')
                 dna_seg_list[[i]]$gene_type <- rep("arrows", length(dna_seg_list[[i]]$gene_type))
                 
@@ -503,7 +503,6 @@ class Locus2genoplotR():
                 dna_seg_list[[i]]$lty[w] <- 1
 		        #print(head(dna_seg_list[[i]]))	
 
-
                 w <- which(dna_seg_list[[i]]$gene=='-')
                 dna_seg_list[[i]]$name[w] <- ""
 
@@ -512,7 +511,6 @@ class Locus2genoplotR():
             }
 
             names(dna_seg_list) <- names
-
 
             all_id <- c()
 
@@ -590,7 +588,7 @@ class Locus2genoplotR():
             #print (height)
             #print (width)
             
-            CairoPDF('test2.pdf',height=height,width=width)# 4,14 / 3.8 (yersinia)/2 (oxa)
+            Cairo%s('%s',height=height,width=width)# 4,14 / 3.8 (yersinia)/2 (oxa)
 
                 xlims <- list(c(1,50000), c(1,50000))
                 plot.new()
@@ -631,7 +629,9 @@ class Locus2genoplotR():
                     }
 
             dev.off()
-        ''' % plot)
+        ''' % (self.output_format,
+               self.output_name,
+               plot))
 
 
 if __name__ == '__main__':
@@ -644,6 +644,7 @@ if __name__ == '__main__':
     parser.add_argument("-r",'--reference', type=str, help="reference genbank")
     parser.add_argument("-q",'--query', type=str, help="target genbank(s)", nargs='+')
     parser.add_argument("-o",'--output_name', help="output name", default='out')
+    parser.add_argument("-v",'--svg', help="output svg rather than pdf", action='store_true')
     parser.add_argument("-ls",'--left_side_window', type=int, help="left siden window", default=15000)
     parser.add_argument("-rs",'--right_side_window', type=int, help="right side window", default=15000)
     parser.add_argument("-i",'--min_identity', type=int, help="minimum identity for blast", default=50)
@@ -652,7 +653,6 @@ if __name__ == '__main__':
     parser.add_argument("-x",'--tblastx', action="store_true", help="execute tblastx and not blasn (6 frame translations)")
     parser.add_argument("-g",'--gc_plot', action="store_true", help="Show GC plot")
 
-
     args = parser.parse_args()
 
     L = Locus2genoplotR(args.locus,
@@ -660,7 +660,10 @@ if __name__ == '__main__':
                         args.query,
                         left_side=args.left_side_window,
                         right_side=args.right_side_window,
-                        tblastx=args.tblastx)
+                        tblastx=args.tblastx,
+                        output_name=args.output_name,
+                        svg=args.svg)
+
     if args.query:
         start, end, flip_record = L.blast_target_genbank()
 
@@ -689,10 +692,11 @@ if __name__ == '__main__':
                             depth_file=args.samtools_depth,
                             show_GC_last=args.gc_plot)
     else:
+        # single record, draw it with genome diagram
         gbk_list = L.write_genbank_subrecords([L.ref_sub_record])
         L.record2single_plot(gbk_list[0], 
                              'test', 
                              show_labels=args.show_labels, 
                              target_locus=args.locus,
-                             output_name=args.output_name)
-
+                             output_name=args.output_name,
+                             svg=args.svg)

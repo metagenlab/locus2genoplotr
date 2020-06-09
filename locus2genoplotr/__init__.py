@@ -16,7 +16,7 @@ def main():
     parser.add_argument("-s", '--samtools_depth', default=False, help="add depth plot from samtool depth (only for the last query). Should match the chromosome/contig names of the gbk.")
     parser.add_argument("-x",'--tblastx', action="store_true", help="execute tblastx and not blasn (6 frame translations)")
     parser.add_argument("-g",'--gc_plot', action="store_true", help="Show GC plot")
-
+    parser.add_argument("-o",'--output_name', type=str, help="Output prefix", default="out")
 
     args = parser.parse_args()
 
@@ -25,7 +25,9 @@ def main():
                                         args.query,
                                         left_side=args.left_side_window,
                                         right_side=args.right_side_window,
-                                        tblastx=args.tblastx)
+                                        tblastx=args.tblastx,
+                                        output_name=args.output_name,
+                                        svg=args.svg)
 
     if args.query:
         start, end, flip_record = L.blast_target_genbank()
@@ -35,13 +37,14 @@ def main():
 
 
         for i, name in enumerate(names):
-            tmp_name = re.sub(', complete sequence.','', name)
+            tmp_name = re.sub(',.*','', name)
             tmp_name = re.sub('strain ','', tmp_name)
             tmp_name = re.sub('Klebsiella pneumoniae ','K.p ', tmp_name)
             tmp_name = re.sub(', complete genome.','', tmp_name)
             tmp_name = re.sub('-contig_48','', tmp_name)
             tmp_name = re.sub('subsp. pneumoniae','', tmp_name)
             names[i] = tmp_name
+            
         blast_result_files = L.record_list2blast(all_records, args.min_identity)
         gbk_list = L.write_genbank_subrecords(all_records)
 
@@ -52,11 +55,14 @@ def main():
                             last_record_start=start,
                             last_record_end=end,
                             flipped_record=flip_record,
-                            depth_file=args.samtools_depth)
+                            depth_file=args.samtools_depth,
+                            show_GC_last=args.gc_plot)
     else:
         gbk_list = L.write_genbank_subrecords([L.ref_sub_record])
         L.record2single_plot(gbk_list[0], 
                              'test', 
                              show_labels=args.show_labels, 
-                             target_locus=args.locus)
+                             target_locus=args.locus,
+                             output_name=args.output_name,
+                             svg=args.svg)
 
