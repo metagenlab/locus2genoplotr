@@ -17,6 +17,7 @@ def main():
     parser.add_argument("-x",'--tblastx', action="store_true", help="execute tblastx and not blasn (6 frame translations)")
     parser.add_argument("-g",'--gc_plot', action="store_true", help="Show GC plot")
     parser.add_argument("-o",'--output_name', type=str, help="Output prefix", default="out")
+    parser.add_argument("-v",'--svg', help="output svg rather than pdf", action='store_true')
 
     args = parser.parse_args()
 
