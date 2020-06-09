@@ -4,9 +4,9 @@ FROM continuumio/miniconda3:4.7.10
 ################## METADATA ######################
  
 LABEL base.image="miniconda3:4.7.10"
-LABEL version="1"
+LABEL version="1.1"
 LABEL software="locus2genoplotr"
-LABEL software.version="1.0"
+LABEL software.version="1.1"
 LABEL tags="Genomics"
  
 ################## MAINTAINER ######################
