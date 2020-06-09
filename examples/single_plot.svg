@@ -2,13 +2,13 @@
 <!DOCTYPE svg
   PUBLIC '-//W3C//DTD SVG 1.0//EN'
   'http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd'>
-<svg fill-rule="evenodd" height="200" preserveAspectRatio="xMinYMin meet" version="1.0" viewBox="0 0 676 200" width="676.76" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="676.76" height="200" preserveAspectRatio="xMinYMin meet" viewBox="0 0 676 200" xmlns="http://www.w3.org/2000/svg" version="1.0" fill-rule="evenodd" xmlns:xlink="http://www.w3.org/1999/xlink">
 	<title>...</title>
 	<desc>...</desc>
 	<clipPath id="clip">
-		<rect height="200" width="676.76" x="0" y="0"/>
+		<rect x="0" y="0" width="676.76" height="200"/>
 	</clipPath>
-	<g id="group" style="clip-path: url(#clip)" transform="scale(1,-1) translate(0,-200)">
+	<g id="group" transform="scale(1,-1) translate(0,-200)" style="clip-path: url(#clip)">
 		<g transform="">
 			<polygon points="33.838 135.4375, 42.50309 135.4375, 42.50309 147.25, 66.12809 123.625, 42.50309 100, 42.50309 111.8125, 33.838 111.8125" style="stroke: rgb(0%,0%,100%); stroke-linecap: round; stroke-width: 1; fill: rgb(0%,0%,100%);"/>
 			<polygon points="80.23926 135.4375, 80.23926 147.25, 102.9179 123.625, 80.23926 100, 80.23926 111.8125" style="stroke: rgb(100%,0%,0%); stroke-linecap: round; stroke-width: 1; fill: rgb(100%,0%,0%);"/>
@@ -28,43 +28,43 @@
 			<path d="M 33.838000,52.750000 L 33.838000,147.250000 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
 			<path d="M 393.816723,100.000000 L 393.816723,114.175000 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
 			<g transform=" matrix(0.906308,0.422618,-0.422618,0.906308,49.983046,147.250000)">
-				<text style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)" x="0" y="0">galF</text>
+				<text x="0" y="0" style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)">galF</text>
 			</g>
 			<g transform=" matrix(0.906308,0.422618,-0.422618,0.906308,91.578587,147.250000)">
-				<text style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)" x="0" y="0">cpsACP</text>
+				<text x="0" y="0" style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)">cpsACP</text>
 			</g>
 			<g transform=" matrix(0.906308,0.422618,-0.422618,0.906308,163.250351,147.250000)">
-				<text style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)" x="0" y="0">wzi</text>
+				<text x="0" y="0" style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)">wzi</text>
 			</g>
 			<g transform=" matrix(0.906308,0.422618,-0.422618,0.906308,214.745307,147.250000)">
-				<text style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)" x="0" y="0">wza</text>
+				<text x="0" y="0" style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)">wza</text>
 			</g>
 			<g transform=" matrix(0.906308,0.422618,-0.422618,0.906308,243.111631,147.250000)">
-				<text style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)" x="0" y="0">wzb</text>
+				<text x="0" y="0" style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)">wzb</text>
 			</g>
 			<g transform=" matrix(0.906308,0.422618,-0.422618,0.906308,290.286843,147.250000)">
-				<text style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)" x="0" y="0">wzc</text>
+				<text x="0" y="0" style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)">wzc</text>
 			</g>
 			<g transform=" matrix(0.906308,0.422618,-0.422618,0.906308,352.239181,147.250000)">
-				<text style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)" x="0" y="0">wcuD</text>
+				<text x="0" y="0" style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)">wcuD</text>
 			</g>
 			<g transform=" matrix(0.906308,0.422618,-0.422618,0.906308,392.106824,147.250000)">
-				<text style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)" x="0" y="0">wcuC</text>
+				<text x="0" y="0" style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)">wcuC</text>
 			</g>
 			<g transform=" matrix(0.906308,0.422618,-0.422618,0.906308,434.080344,147.250000)">
-				<text style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)" x="0" y="0">wcuV</text>
+				<text x="0" y="0" style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)">wcuV</text>
 			</g>
 			<g transform=" matrix(0.906308,0.422618,-0.422618,0.906308,479.779643,147.250000)">
-				<text style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)" x="0" y="0">wbaZ</text>
+				<text x="0" y="0" style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)">wbaZ</text>
 			</g>
 			<g transform=" matrix(0.906308,0.422618,-0.422618,0.906308,527.944796,147.250000)">
-				<text style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)" x="0" y="0">wcaJ</text>
+				<text x="0" y="0" style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)">wcaJ</text>
 			</g>
 			<g transform=" matrix(0.906308,0.422618,-0.422618,0.906308,571.556218,147.250000)">
-				<text style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)" x="0" y="0">wcuE</text>
+				<text x="0" y="0" style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)">wcuE</text>
 			</g>
 			<g transform=" matrix(0.906308,0.422618,-0.422618,0.906308,609.030003,147.250000)">
-				<text style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)" x="0" y="0">wcuG</text>
+				<text x="0" y="0" style="font-family: Helvetica; font-size: 12px; fill: rgb(0%,0%,0%);" transform="translate(0,0) scale(1,-1)">wcuG</text>
 			</g>
 		</g>
 	</g>
