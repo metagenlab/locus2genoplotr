@@ -13,6 +13,8 @@ Plot gene or genome maps and comparisons genome plots. Generate *SVG* and *PDF* 
 conda env create -f env.yaml
 # activate the environment
 conda activate locus2genoplotr
+# execute 
+locus2genoplotr -h
 ```
 
 ## Method 2: Docker/Singularity container   
@@ -20,7 +22,7 @@ conda activate locus2genoplotr
 Dependency: use either singularity or docker  
  - [Singularity](https://sylabs.io/guides/3.0/user-guide/installation.html)
  - [Docker](https://www.docker.com/)
- - 
+  
 ### build singularity image 
 
 ```bash
@@ -146,3 +148,4 @@ locus2genoplotr -l KL28_00008 -r data/KL28.gbk -q data/capsule_region_150bp_asse
 # TODO 
 
 - [ ] deal with combined GC and depth plots 
+- [ ] cleanup dependancies to reduce conda env size
