@@ -30,14 +30,14 @@ singularity build locus2genoplotr.simg docker://metagenlab/locus2genoplotr:1.1
 
 ### simple plot 
 
-![Simple plot](examples/images/plasmid_linear.svg)
+![Simple plot](examples/plasmid_linear.svg)
 
 ### comparative plot
 
 ```bash
 locus2genoplotr -l KL28_00008 -r data/KL28.gbk -q data/capsule_region_150bp_assembly_concat.gbk data/capsule_region_250bp_assembly_concat.gbk -rs 45000 -ls 30000 -o simple_comp -v
 ```
-![Comparison plot](examples/images/simple_comp.svg)
+![Comparison plot](examples/simple_comp.svg)
 
 ### comparative plot tblastx
 
@@ -61,4 +61,4 @@ locus2genoplotr -l KL28_00008 -r data/KL28.gbk -q data/capsule_region_150bp_asse
 locus2genoplotr -l KL28_00008 -r data/KL28.gbk -q data/capsule_region_150bp_assembly_concat.gbk data/capsule_region_250bp_assembly_concat.gbk -rs 45000 -ls 30000 -o capsule_with_gc -v -g
 ```
 
-![Depth plot](examples/images/capsule_with_depth.svg)
+![Depth plot](examples/capsule_with_depth.svg)
