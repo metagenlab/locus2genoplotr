@@ -15,18 +15,30 @@ conda env create -f env.yaml
 conda activate locus2genoplotr
 ```
 
-## Method 2: Singularity container   
+## Method 2: Docker/Singularity container   
 
-Dependency: [Singularity](https://sylabs.io/guides/3.0/user-guide/installation.html)
-
-### build the image 
+Dependency: use either singularity or docker  
+ - [Singularity](https://sylabs.io/guides/3.0/user-guide/installation.html)
+ - [Docker](https://www.docker.com/)
+ - 
+### build singularity image 
 
 ```bash
 # build image
 singularity build locus2genoplotr.simg docker://metagenlab/locus2genoplotr:1.1
 # execute
-songularity exec locus2genoplotr.simg locus2genoplotr ...
+singularity exec locus2genoplotr.simg locus2genoplotr -h
 ```
+
+### build docker image 
+
+```bash
+# pull image
+docker pull docker://metagenlab/locus2genoplotr:1.1
+# run
+docker run metagenlab/locus2genoplotr:1.1 locus2genoplotr -h
+```
+
 
 ## Usage
 
