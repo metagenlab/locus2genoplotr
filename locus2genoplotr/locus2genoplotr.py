@@ -29,10 +29,10 @@ class Locus2genoplotR():
         self.tblastx = tblastx
         
         if svg:
-            self.output_format = 'SVG'
+            self.output_format = 'svg'
             self.output_name = f'{output_name}.svg'
         else:
-            self.output_format = 'PDF'
+            self.output_format = 'pdf'
             self.output_name = f'{output_name}.pdf'
 
         if type(reference_genbank) == str:
@@ -471,7 +471,7 @@ class Locus2genoplotR():
                 pdf_height_scale <- 2.5#2.5            
             }else{
                  second_plot_height <- 0.1  
-                 pdf_height_scale <- 2 
+                 pdf_height_scale <- 2.5
             }
 
             dna_seg_list <- list()
@@ -583,12 +583,13 @@ class Locus2genoplotR():
             height <- length(blast_list)*pdf_height_scale
             len_seq <- (dna_seg_list[[1]]$end[length(dna_seg_list[[1]]$end)] - dna_seg_list[[1]]$start[1])
             len_kb <- len_seq/1000
-            width <- len_kb/1.5
+            width <- len_kb/3
             print("dimensions:")
             print (height)
             print (width)
-            
-            Cairo%s('%s',height=height,width=width)# 4,14 / 3.8 (yersinia)/2 (oxa)
+            #Cairo not working properly (font problem)
+            # use standard pdf/svg
+            %s('%s',height=height,width=width)# 4,14 / 3.8 (yersinia)/2 (oxa)
 
                 xlims <- list(c(1,50000), c(1,50000))
                 plot.new()
