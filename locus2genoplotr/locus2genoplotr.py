@@ -582,7 +582,7 @@ class Locus2genoplotR():
 
             height <- length(blast_list)*pdf_height_scale
             len_seq <- (dna_seg_list[[1]]$end[length(dna_seg_list[[1]]$end)] - dna_seg_list[[1]]$start[1])
-            len_kb <- len_seq/1000
+            len_kb <- len_seq/100
             width <- len_kb/2
             #print("dimensions:")
             #print (height)
@@ -677,7 +677,8 @@ if __name__ == '__main__':
             tmp_name = re.sub('Klebsiella pneumoniae ','K.p ', tmp_name)
             tmp_name = re.sub(', complete genome.','', tmp_name)
             tmp_name = re.sub('-contig_48','', tmp_name)
-            tmp_name = re.sub('subsp. pneumoniae','', tmp_name)
+            tmp_name = re.sub('subsp.*','', tmp_name)
+            
             names[i] = tmp_name
         blast_result_files = L.record_list2blast(all_records, args.min_identity)
         gbk_list = L.write_genbank_subrecords(all_records)
