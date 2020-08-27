@@ -582,11 +582,11 @@ class Locus2genoplotR():
 
             height <- length(blast_list)*pdf_height_scale
             len_seq <- (dna_seg_list[[1]]$end[length(dna_seg_list[[1]]$end)] - dna_seg_list[[1]]$start[1])
-            len_kb <- len_seq/100
-            width <- len_kb/2
-            #print("dimensions:")
-            #print (height)
-            #print (width)
+            len_kb <- len_seq/1000
+            width <- len_kb/1.5
+            print("dimensions:")
+            print (height)
+            print (width)
             
             Cairo%s('%s',height=height,width=width)# 4,14 / 3.8 (yersinia)/2 (oxa)
 
