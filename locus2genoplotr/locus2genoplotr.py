@@ -34,7 +34,7 @@ class Locus2genoplotR():
         else:
             self.output_format = 'pdf'
             self.output_name = f'{output_name}.pdf'
-
+        print("TYPE", type(reference_genbank))
         if type(reference_genbank) == str:
             self.reference_record = [i for i in SeqIO.parse(open(reference_genbank), 'genbank')]
         elif isinstance(reference_genbank, SeqRecord.SeqRecord):
@@ -87,9 +87,6 @@ class Locus2genoplotR():
                 if 'locus_tag' in feature.qualifiers:
                     if feature.qualifiers['locus_tag'][0] == target_locus_tag:
 
-
-
-
                         query_start = int(feature.location.start)
                         query_end = int(feature.location.end)
 
@@ -103,7 +100,7 @@ class Locus2genoplotR():
 
                         if region_end > len(record.seq):
                             region_end=len(record.seq)
-                        print ('extraction from %s to %s' % (region_start, region_end))
+                        print(f'{record.id}\t{region_start}\t{region_end}')
                         query_sub_record = record[region_start:region_end]
 
                         target_record = SeqRecord(feature.extract(record.seq).translate(),
@@ -113,6 +110,7 @@ class Locus2genoplotR():
                         match=True
                         match_feature = feature
                         break
+                    
                 if 'protein_id' in feature.qualifiers:
                     if feature.qualifiers['protein_id'][0] == target_locus_tag:
 
@@ -126,9 +124,8 @@ class Locus2genoplotR():
                         region_end = query_end+right_side
                         if region_end > len(record.seq):
                             region_end=len(record.seq)
-                        print ('extraction from %s to %s' % (region_start, region_end))
-
-
+                            
+                        print(f'{record.id}\t{region_start}\t{region_end}')
 
                         query_sub_record = record[region_start:region_end]
 
@@ -139,7 +136,7 @@ class Locus2genoplotR():
                         match=True
                         match_feature = feature
                         break
-        print('match,', match)
+
         if not match:
             return False
         else:
@@ -211,10 +208,10 @@ class Locus2genoplotR():
             print ('best hit locus:', best_hit[1])
 
             target_seq, target_sub_record, feature, start, end = self.get_target_locus_region(best_hit[1],
-                                                                         rec_list,
-                                                                         right_side=self.right_side,
-                                                                         left_side=self.left_side,
-                                                                         flip_record=False)
+                                                                                              rec_list,
+                                                                                              right_side=self.right_side,
+                                                                                              left_side=self.left_side,
+                                                                                              flip_record=False)
             flip_record = False
 
             '''
@@ -259,7 +256,7 @@ class Locus2genoplotR():
         return start, end, flip_record
 
 
-    def write_genbank_subrecords(self, subrecord_list):
+    def write_genbank_subrecords(self, subrecord_list, keep=False):
         from tempfile import NamedTemporaryFile
         from io import StringIO
 
@@ -275,7 +272,10 @@ class Locus2genoplotR():
             temp_ref.write(fastastr.getvalue())
             temp_ref.flush()
             out_names.append(temp_ref.name)
+            if keep:
+                SeqIO.write(record, "sub_records/{record.name}.gbk", "genbank")
         return out_names
+
 
     def record_list2blast(self, record_list, min_identity):
         '''
@@ -682,7 +682,7 @@ if __name__ == '__main__':
             
             names[i] = tmp_name
         blast_result_files = L.record_list2blast(all_records, args.min_identity)
-        gbk_list = L.write_genbank_subrecords(all_records)
+        gbk_list = L.write_genbank_subrecords(all_records, keep=True)
 
         L.record2multi_plot(gbk_list,
                             blast_result_files,
@@ -695,7 +695,7 @@ if __name__ == '__main__':
                             show_GC_last=args.gc_plot)
     else:
         # single record, draw it with genome diagram
-        gbk_list = L.write_genbank_subrecords([L.ref_sub_record])
+        gbk_list = L.write_genbank_subrecords([L.ref_sub_record], keep=True)
         L.record2single_plot(gbk_list[0], 
                              'test', 
                              show_labels=args.show_labels, 
