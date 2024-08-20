@@ -34,7 +34,7 @@ class Locus2genoplotR():
         else:
             self.output_format = 'pdf'
             self.output_name = f'{output_name}.pdf'
-
+        print(type(reference_genbank))
         if type(reference_genbank) == str:
             self.reference_record = [i for i in SeqIO.parse(open(reference_genbank), 'genbank')]
         elif isinstance(reference_genbank, SeqRecord.SeqRecord):
@@ -44,12 +44,13 @@ class Locus2genoplotR():
         else:
             raise IOError('wrong input reference')
 
+        print("extract subrecord ref")
         self.ref_locus_seqrecord, self.ref_sub_record, self.ref_feature, self.region_start, self.region_end = self.get_target_locus_region(self.query_locus,
                                                                                      self.reference_record,
                                                                                      right_side=right_side,
                                                                                      left_side=left_side,
                                                                                      flip_record=False)
-
+        print("extract subrecord ref OK")
         '''
         self.orf_leading_strand_count = 0
         self.orf_lagging_strand_count = 0
@@ -63,7 +64,16 @@ class Locus2genoplotR():
         print 'orf count:', self.orf_leading_strand_count, self.orf_lagging_strand_count
         '''
 
-    def get_target_locus_region(self, target_locus_tag,
+    def clean_header(self, name):
+        
+        tmp_name = re.sub(',.*','', name)
+        tmp_name = re.sub('strain ','', tmp_name)
+        tmp_name = re.sub(', complete genome.','', tmp_name)
+        
+        return tmp_name
+
+    def get_target_locus_region(self, 
+                                target_locus_tag,
                                 records,
                                 right_side=0,
                                 left_side=0,
@@ -73,15 +83,11 @@ class Locus2genoplotR():
         match=False
         for record in records:
             if flip_record:
-
-                name = record.description
-                tmp_name = re.sub(',.*','', name)
-                tmp_name = re.sub('strain ','', tmp_name)
-                tmp_name = re.sub(', complete genome.','', tmp_name)
-                record.description = tmp_name
+                record.description = self.clean_header(record.description)
                 record = record.reverse_complement(id=record.id,
                                                    name=record.id,
-                                                   description=tmp_name)
+                                                   description="flip",
+                                                   annotations=True)
 
             for feature in record.features:
                 if 'locus_tag' in feature.qualifiers:
@@ -103,7 +109,7 @@ class Locus2genoplotR():
 
                         if region_end > len(record.seq):
                             region_end=len(record.seq)
-                        print ('extraction from %s to %s' % (region_start, region_end))
+                        print (f'extraction: {record.name},{region_start},{region_end}')
                         query_sub_record = record[region_start:region_end]
 
                         target_record = SeqRecord(feature.extract(record.seq).translate(),
@@ -126,7 +132,7 @@ class Locus2genoplotR():
                         region_end = query_end+right_side
                         if region_end > len(record.seq):
                             region_end=len(record.seq)
-                        print ('extraction from %s to %s' % (region_start, region_end))
+                        print (f'extraction: {record.name},{region_start},{region_end}')
 
 
 
@@ -197,7 +203,9 @@ class Locus2genoplotR():
             temp_target = NamedTemporaryFile(delete=False, mode='w')
             fastastr = StringIO()
 
+            print("gbk2faa")
             gbk2faa.gbk2faa(rec_list, lformat=True, output_handle=fastastr)
+            print("gbk2faa ok")
             #SeqIO.write(rec_list, fastastr, 'fasta')
             temp_target.write(fastastr.getvalue())
             temp_target.flush()
@@ -209,12 +217,13 @@ class Locus2genoplotR():
             B.run_blastp()
             best_hit = B.best_hit_list[0]
             print ('best hit locus:', best_hit[1])
-
+            print("EXTRACTION")
             target_seq, target_sub_record, feature, start, end = self.get_target_locus_region(best_hit[1],
                                                                          rec_list,
                                                                          right_side=self.right_side,
                                                                          left_side=self.left_side,
                                                                          flip_record=False)
+            print("EXTRACTION OK")
             flip_record = False
 
             '''
@@ -655,7 +664,7 @@ if __name__ == '__main__':
     parser.add_argument("-g",'--gc_plot', action="store_true", help="Show GC plot")
 
     args = parser.parse_args()
-
+    print("INIT")
     L = Locus2genoplotR(args.locus,
                         args.reference,
                         args.query,
@@ -664,10 +673,11 @@ if __name__ == '__main__':
                         tblastx=args.tblastx,
                         output_name=args.output_name,
                         svg=args.svg)
-
+    print("INIT OK")
     if args.query:
+        print("BLAST")
         start, end, flip_record = L.blast_target_genbank()
-
+        print("BLAST OK")
         all_records = [L.ref_sub_record] + L.sub_record_list
         names = [record.description for record in all_records]
 
@@ -681,9 +691,11 @@ if __name__ == '__main__':
             tmp_name = re.sub('subsp.*','', tmp_name)
             
             names[i] = tmp_name
+        print("BLAST")
         blast_result_files = L.record_list2blast(all_records, args.min_identity)
+        print("WRITE GENBANK")
         gbk_list = L.write_genbank_subrecords(all_records)
-
+        print("MULTIPLOT")
         L.record2multi_plot(gbk_list,
                             blast_result_files,
                             names,
