@@ -13,7 +13,7 @@ from TPutils import blast_utils
 from Bio.Seq import Seq
 import glob
 from itertools import chain
-from pygenomeviz import Genbank, GenomeViz, load_dataset
+from pygenomeviz import GenomeViz
 
 class Subrecord():
     def __init__(self, gbk_record, out_prefix, basename=False):
@@ -105,7 +105,8 @@ class GenomeComp():
                  svg=False,
                  min_identity=50,
                  force_data_dir=False,
-                 filp_records=True):
+                 flip_records=True,
+                 flip_reference=False):
 
         from Bio import SeqRecord, SeqIO
         import shutil
@@ -113,7 +114,7 @@ class GenomeComp():
         
         self.query_locus = query_locus
         self.upstream_bp = upstream_bp
-        self.upstream_bp = upstream_bp
+        self.downstream_bp = downstream_bp
         self.tblastx = tblastx
         self.min_identity = min_identity
         self.cluster2highlights = {}
@@ -153,10 +154,17 @@ class GenomeComp():
                                                    query_locus, 
                                                    upstream_bp, 
                                                    downstream_bp, 
-                                                   flip_record=False,
+                                                   flip_record=flip_reference,
+                                                   force_flip=True,
                                                    basename=self.reference_basename)
         
-        self.reference_orientation = self.ref_subset["target_locus_strand"]
+        if flip_reference:
+            if self.ref_subset["target_locus_strand"] == 1:
+                self.reference_orientation = -1
+            else:
+                self.reference_orientation = 1
+        else:
+            self.reference_orientation = self.ref_subset["target_locus_strand"]
     
         self.ref_locus_record = SeqRecord.SeqRecord(self.ref_subset["seq"],
                                     id=self.query_locus,
@@ -182,14 +190,17 @@ class GenomeComp():
         
         logging.info("Extracting bbh from targets")
         self.target_BBH_locus = [self.blast_best_hit(self.ref_locus_faa, i.faa_file_path) for i in self.target_full_records]
+        print(self.target_BBH_locus)
         logging.info("Extracting subrecords targets")
+        print(self.target_BBH_locus)
+        print(self.target_records_list)
         self.target_subrecords = [self.get_sequence_subset(seqrecords["records"], 
                                                            target_id["subject_id"], 
                                                            upstream_bp, 
                                                            downstream_bp, 
                                                            basename=seqrecords["basename"],
-                                                           flip_record=filp_records) for target_id, seqrecords in zip(self.target_BBH_locus, 
-                                                                                                                             self.target_records_list)]
+                                                           flip_record=flip_records) for target_id, seqrecords in zip(self.target_BBH_locus,
+                                                                                                                      self.target_records_list)]
 
         self.target_faa_subrecords = [Subrecord(target_sub["subset_record"], 
                                                f'{self.output_folder}/{target_sub["basename"]}.sub',
@@ -197,6 +208,7 @@ class GenomeComp():
 
         
         logging.info("Perform blast comparisons of the reference and targets")
+        print([i.basename for i in self.target_faa_subrecords])
         self.blast_comparaisons = self.record_list2blast([self.ref_subset["subset_record"]] + [i["subset_record"] for i in self.target_subrecords], min_identity)
 
 
@@ -290,13 +302,14 @@ class GenomeComp():
             return bbh
 
 
-    def get_sequence_subset(self, 
-                            seqrecords, 
-                            target_id, 
-                            upstream_bp, 
-                            downstream_bp, 
+    def get_sequence_subset(self,
+                            seqrecords,
+                            target_id,
+                            upstream_bp,
+                            downstream_bp,
                             basename=False,
-                            flip_record=True):
+                            flip_record=True,
+                            force_flip=False):
         """
         Reads a GenBank file, searches for a specific locus_tag or protein_id in the record,
         and returns a subset of the record with the matching feature and a specified number of
@@ -343,7 +356,22 @@ class GenomeComp():
         subset_record = match_record[subset_start:subset_end]
 
         if flip_record:
-            if strand != self.reference_orientation:
+            if force_flip:
+                print("FLIPPING", subset_record.id)
+                # reverse downstream_bp and upstream
+                subset_start = max(0, feature_start - downstream_bp)
+                subset_end = min(len(match_record), feature_end + upstream_bp)
+                subset_record = match_record[subset_start:subset_end]
+                subset_record = subset_record.reverse_complement(id=subset_record.id,
+                                                                 name=subset_record.id,
+                                                                 description=subset_record.description,
+                                                                 annotations=True)
+            elif strand != self.reference_orientation:
+                print("FLIPPING", subset_record.id)
+                # reverse downstream_bp and upstream
+                subset_start = max(0, feature_start - downstream_bp)
+                subset_end = min(len(match_record), feature_end + upstream_bp)
+                subset_record = match_record[subset_start:subset_end]
                 subset_record = subset_record.reverse_complement(id=subset_record.id,
                                                                  name=subset_record.id,
                                                                  description=subset_record.description,
@@ -376,7 +404,6 @@ class GenomeComp():
         
 
     def get_spaced_colors(self, n):
-        
         '''
         Return n spaces colors color
         '''
@@ -391,7 +418,7 @@ class GenomeComp():
     def get_genome_label(self, contig_name):
         '''
         get genome label from contig label
-        WARNING: require unique contig names 
+        WARNING: require unique contig names
         TODO: make it work with non unique contig name
         '''
         if self.contig2basename[contig_name] in self.basename2label:
@@ -413,12 +440,13 @@ class GenomeComp():
 
         print(f"ADDING {label}")
         track = gv.add_feature_track(label, 
-                                     len(gbk.seq))
+                                         len(gbk.seq))
+        
 
         for feature in gbk.features:
             if feature.type == 'CDS':
                 # default
-                color='grey'
+                color='#eaeaea'
                 labelcolor = 'black'
                 if 'gene' in feature.qualifiers:
                     label = feature.qualifiers["gene"][0]
@@ -439,9 +467,10 @@ class GenomeComp():
                     
                     if cluster in self.cluster2color:
                         color = self.cluster2color[cluster]
-                        
-                        
-                    # color and label specific clusters based on color file 
+                        hatch = ''
+                    else:
+                        hatch = '//'
+                    # color and label specific clusters based on color file
                     if cluster in self.cluster2highlights:
                         color = self.cluster2highlights[cluster]["color"]
                         label = self.cluster2highlights[cluster]["label"]
@@ -466,8 +495,23 @@ class GenomeComp():
                             else:
                                 label = m.group(0)
                             linecolor = reg2color[reg]["color"]
-                            break 
-      
+                            break
+                    if 'note' in feature.qualifiers:
+                        m = re.match(reg, feature.qualifiers["note"][0])
+                        if m:
+                            if reg2color[reg]["label"] is not None:
+                                label = reg2color[reg]["label"]
+                            else:
+                                label = m.group(0)
+
+                            linecolor = reg2color[reg]["color"]
+                            break
+                # keep gene label whenever possible
+                if 'gene' in feature.qualifiers:
+                    label = feature.qualifiers["gene"][0]
+                if label == 'transposase':
+                    label = 'tnp'
+                
                 # if we have a match, increase linewidth and set line color
                 if highligh_line and linecolor != color:
                     linecolor = linecolor
@@ -475,26 +519,28 @@ class GenomeComp():
                 else:
                     color = linecolor
                     linecolor = None 
-                    linewidth = 0
+                    linewidth = 0.5
 
-                track.add_feature(feature.location.start, 
-                                  feature.location.end, 
-                                  feature.location.strand, 
-                                  label=label, 
-                                  labelrotation=45, 
+                track.add_feature(feature.location.start,
+                                  feature.location.end,
+                                  feature.location.strand,
+                                  plotstyle="bigarrow",
+                                  label=label,
                                   facecolor=color,
-                                  labelcolor = labelcolor,
-                                  linewidth = linewidth,
-                                  edgecolor=linecolor)
+                                  lw=linewidth,
+                                  edgecolor=linecolor,
+                                  hatch=hatch,
+                                  text_kws=dict(rotation=45, hpos="left", vpos="top", color=labelcolor))
             
-            if feature.type in ["tRNA", 'rRNA']:                
-                track.add_feature(feature.location.start, 
-                                feature.location.end, 
-                                feature.location.strand, 
-                                label=feature.type, 
-                                linewidth=0, 
-                                labelrotation=45, 
-                                facecolor='orange')
+            if feature.type in ["tRNA", 'rRNA']:            
+                track.add_feature(feature.location.start,
+                                feature.location.end,
+                                feature.location.strand,
+                                plotstyle="bigarrow",
+                                label=feature.type,
+                                lw=0,
+                                facecolor='orange',
+                                text_kws=dict(rotation=45, hpos="left", vpos="top", color=labelcolor))
     
     
     def add_link(self, gv, blast_table):
@@ -516,7 +562,7 @@ class GenomeComp():
             print()
             link_data1 = (query_label, link.qstart, link.qend)
             link_data2 = (subject_label, link.sstart, link.send)
-            gv.add_link(link_data1, link_data2, v=link.pident, curve=True,normal_color="skyblue", inverted_color="lime")
+            gv.add_link(link_data1, link_data2, v=link.pident, curve=True, color="skyblue", inverted_color="lime")
 
     def parse_highlights(self, path):
         import pandas
@@ -534,30 +580,29 @@ class GenomeComp():
         gv = GenomeViz(
             fig_track_height=0.7,
             feature_track_ratio=0.2,
-            tick_track_ratio=0.4,
-            tick_style="bar",
-            align_type="center",
+            # track_align_type="center",
+            # tick_track_ratio=0.4,
         )
 
         if color_clusters:
             self.get_colors_from_clusters()
 
         print('Adding ref track...........')
-        self.add_gbk_track(gv, 
-                           self.ref_subrecord.gbk_record, 
-                           color_clusters=color_clusters, 
+        self.add_gbk_track(gv,
+                           self.ref_subrecord.gbk_record,
+                           color_clusters=color_clusters,
                            reg2color=reg_highlights)
         
-        print('Adding target tracks...........')
-        for n,sub in enumerate(self.target_faa_subrecords):
-            print(f"######### Track {n}")
+        print('Adding target tracks...........', len(self.target_faa_subrecords))
+        for n, sub in enumerate(self.target_faa_subrecords):
+            print(f"######### Track {n} - {sub.gbk_record.id}")
             self.add_gbk_track(gv, sub.gbk_record, color_clusters=color_clusters, reg2color=reg_highlights, count=n)
         
         for blast in self.blast_comparaisons:
             self.add_link(gv, blast)
         
         fig = gv.plotfig()
-        gv.set_colorbar(fig, vmin=self.min_identity, bar_height=0.4,bar_colors=["skyblue", "lime"] )
+        gv.set_colorbar(["skyblue", "lime"], vmin=self.min_identity, bar_height=0.4)
         fig.savefig(outname)
 
     def get_cluster_consensus_annot(self, records):
@@ -736,25 +781,28 @@ if __name__ == '__main__':
                    output_name='out',
                    svg=False,
                    min_identity=args.min_identity,
-                   force_data_dir=args.force)
+                   force_data_dir=args.force,
+                   flip_records=True,
+                   flip_reference=False)
 
     if args.color:
         G.parse_highlights(args.color)
     if args.basename:
         G.parse_basename2label(args.basename)
 
-    reg_highlights = {r'IS[0-9]+' : { "color": 'blue', "label": None},
-                    r'OXA-[0-9]+': { "color": 'red', "label": None},
-                    r'CTX-M-[0-9]+': { "color": 'red', "label": None},
-                    r'TEM-[0-9]+': { "color": 'red', "label": None},
-                    r'NDM-[0-9]+': { "color": 'red', "label": None},
-                    r'blaNDM-[0-9]+': { "color": 'red', "label": None},
-                    r'mecA': { "color": 'red', "label": None},
-                    r'bla.*': { "color": 'red', "label": None},
-                    r'transposase': { "color": 'blue', "label": 'transp.'},
-                    r'lactamase': { "color": 'red', "label": 'BL'},
-                    #r'hypothetical': { "color": 'black', "label": ''},
-                    }
+    reg_highlights = {r'.*IS[0-9]+' : { "color": '#ff00e0', "label": None},
+                      r'OXA-[0-9]+': { "color": 'red', "label": None},
+                      r'CTX-M-[0-9]+': { "color": 'red', "label": None},
+                      r'TEM-[0-9]+': { "color": 'red', "label": None},
+                      r'NDM-[0-9]+': { "color": 'red', "label": None},
+                      r'blaNDM-[0-9]+': { "color": 'red', "label": None},
+                      r'mecA': { "color": 'red', "label": None},
+                      r'bla.*': { "color": 'red', "label": None},
+                      r'transposase': { "color": '#ff00e0', "label": None},
+                      r'lactamase': { "color": 'red', "label": 'BL'},
+                      r'tnp-': { "color": '#ff00e0', "label": None},
+                      #r'hypothetical': { "color": 'black', "label": ''},
+                      }
 
     G.draw_alignment("test.pdf", 
                      color_clusters=True,
