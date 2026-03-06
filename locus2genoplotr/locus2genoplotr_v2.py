@@ -623,7 +623,7 @@ class GenomeComp:
             }
 
     def draw_alignment(
-        self, outname, color_clusters=False, reg_highlights={}, highlight_line=True
+        self, color_clusters=False, reg_highlights={}, highlight_line=True
     ):
         gv = GenomeViz(
             fig_track_height=0.7,
@@ -662,7 +662,7 @@ class GenomeComp:
         gv.set_colorbar(
             fig, vmin=self.min_identity, bar_height=0.4, bar_colors=["skyblue", "lime"]
         )
-        fig.savefig(outname)
+        fig.savefig(self.output_name)
 
     def get_cluster_consensus_annot(self, records):
         from collections import Counter
@@ -880,7 +880,7 @@ if __name__ == "__main__":
         upstream_bp=args.right_side_window,
         downstream_bp=args.left_side_window,
         tblastx=args.tblastx,
-        output_name="out",
+        output_name=args.output_name,
         svg=False,
         min_identity=args.min_identity,
         force_data_dir=args.force,
@@ -906,7 +906,6 @@ if __name__ == "__main__":
     }
 
     G.draw_alignment(
-        "test.pdf",
         color_clusters=True,
         reg_highlights=reg_highlights,
         highlight_line=True,
