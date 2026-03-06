@@ -1,0 +1,16 @@
+name: locus2genoplotr_v2
+channels:
+ - bioconda
+ - conda-forge
+dependencies:
+ - biopython>=1.76,<=1.79
+ - reportlab
+ - blast
+ - pandas
+ - matplotlib
+ - pygenomeviz
+ - mmseqs2
+ - pip
+ - pip:
+    - git+https://github.com/metagenlab/locus2genoplotr.git
+    - git+https://github.com/metagenlab/TPutils.git
