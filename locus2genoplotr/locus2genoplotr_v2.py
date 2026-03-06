@@ -159,9 +159,10 @@ class GenomeComp:
             self.target_records_list.append({"basename": basename, "records": records})
 
         if svg:
-            self.output_name = f"{output_name}.svg"
+            ext = "svg"
         else:
-            self.output_name = f"{output_name}.pdf"
+            ext = "pdf"
+        self.output_name = os.path.join(self.output_folder, f"{output_name}.{ext}")
 
         logging.info("Extracting reference region")
         self.ref_subset = self.get_sequence_subset(
@@ -828,6 +829,7 @@ if __name__ == "__main__":
         "-t", "--targets", type=str, help="target genbank(s)", nargs="+"
     )
     parser.add_argument("-o", "--output_name", help="output name", default="out")
+    parser.add_argument("-d", "--output_folder", help="output folder", default="l2p")
     parser.add_argument(
         "-v", "--svg", help="output svg rather than pdf", action="store_true"
     )
@@ -879,6 +881,7 @@ if __name__ == "__main__":
         downstream_bp=args.left_side_window,
         tblastx=args.tblastx,
         output_name=args.output_name,
+        output_folder=args.output_folder,
         svg=args.svg,
         min_identity=args.min_identity,
         force_data_dir=args.force,
