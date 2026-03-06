@@ -446,6 +446,7 @@ class GenomeComp:
 
         # track mapping of contig names with file name
         # => allow renaming of tracks
+        subset_record.id = basename + subset_record.id
         self.contig2basename[subset_record.id] = basename
 
         return {
@@ -490,8 +491,6 @@ class GenomeComp:
     def get_genome_label(self, contig_name):
         """
         get genome label from contig label
-        WARNING: require unique contig names
-        TODO: make it work with non unique contig name
         """
         if self.contig2basename[contig_name] in self.basename2label:
             label = self.basename2label[self.contig2basename[contig_name]]
