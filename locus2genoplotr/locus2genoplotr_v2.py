@@ -418,6 +418,7 @@ class GenomeComp:
 
         # track mapping of contig names with file name
         # => allow renaming of tracks
+        subset_record.id = basename + subset_record.id
         self.contig2basename[subset_record.id] = basename
 
         return {
