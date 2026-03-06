@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 from itertools import chain
+from pathlib import Path
 
 from Bio import SeqFeature
 from Bio import SeqIO
@@ -822,7 +823,9 @@ if __name__ == "__main__":
     from Bio import SeqIO
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-a", "--input table", type=str, help="input table")
+    parser.add_argument(
+        "-a", "--input_table", type=str, help="input table, one reference per line"
+    )
     parser.add_argument("-l", "--locus", type=str, help="locus_tag")
     parser.add_argument("-r", "--reference", type=str, help="reference genbank")
     parser.add_argument(
@@ -868,15 +871,21 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--basename", type=str, help="file basename 2 label")
 
     args = parser.parse_args()
+    if args.input_table and args.targets:
+        raise RuntimeError("You cannot specify both targets and an input table.")
 
-    if args.reference in args.targets:
+    if args.input_table:
+        targets = [el.strip() for el in Path(args.input_table).open().readlines()]
+    else:
+        targets = args.targets
+    if args.reference in targets:
         print("Removing reference from targets")
         args.targets.pop(args.targets.index(args.reference))
 
     G = GenomeComp(
         args.locus,
         args.reference,
-        args.targets,
+        targets,
         upstream_bp=args.right_side_window,
         downstream_bp=args.left_side_window,
         tblastx=args.tblastx,
