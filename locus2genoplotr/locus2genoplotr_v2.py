@@ -159,10 +159,8 @@ class GenomeComp:
             self.target_records_list.append({"basename": basename, "records": records})
 
         if svg:
-            self.output_format = "svg"
             self.output_name = f"{output_name}.svg"
         else:
-            self.output_format = "pdf"
             self.output_name = f"{output_name}.pdf"
 
         logging.info("Extracting reference region")
