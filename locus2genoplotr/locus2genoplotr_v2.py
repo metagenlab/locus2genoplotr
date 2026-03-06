@@ -929,7 +929,7 @@ if __name__ == "__main__":
         downstream_bp=args.left_side_window,
         tblastx=args.tblastx,
         output_name=args.output_name,
-        svg=False,
+        svg=args.svg,
         min_identity=args.min_identity,
         force_data_dir=args.force,
         flip_records=True,
