@@ -1,16 +1,23 @@
 #!/usr/bin/env python
 
+import argparse
 import glob
 import logging
 import os
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
+from collections import Counter
 from itertools import chain
+from itertools import combinations
 from pathlib import Path
 
+import pandas
 from Bio import SeqFeature
 from Bio import SeqIO
+from Bio import SeqRecord
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from pygenomeviz import GenomeViz
@@ -119,12 +126,6 @@ class GenomeComp:
         flip_records=True,
         flip_reference=False,
     ):
-
-        import shutil
-
-        from Bio import SeqIO
-        from Bio import SeqRecord
-
         self.query_locus = query_locus
         self.upstream_bp = upstream_bp
         self.downstream_bp = downstream_bp
@@ -295,8 +296,6 @@ class GenomeComp:
         return blast_result_files
 
     def parse_basename2label(self, path):
-        import pandas
-
         df = pandas.read_csv(path, sep="\t", names=["basename", "label"])
         self.basename2label = {row.basename: row.label for n, row in df.iterrows()}
 
@@ -501,7 +500,6 @@ class GenomeComp:
     def add_gbk_track(
         self, gv, gbk, reg2color={}, color_clusters=False, count=0, highligh_line=True
     ):
-        import re
 
         label = self.get_genome_label(gbk.id)
 
@@ -618,8 +616,6 @@ class GenomeComp:
                 )
 
     def add_link(self, gv, blast_table):
-        import pandas
-
         names = [
             "qseqid",
             "sseqid",
@@ -660,8 +656,6 @@ class GenomeComp:
             )
 
     def parse_highlights(self, path):
-        import pandas
-
         df = pandas.read_csv(path, sep="\t")
 
         for n, row in df.iterrows():
@@ -712,8 +706,6 @@ class GenomeComp:
         fig.savefig(self.output_name)
 
     def get_cluster_consensus_annot(self, records):
-        from collections import Counter
-
         cluster2n_genomes = {}
         for record in records:
             clusters = set()
@@ -758,8 +750,6 @@ class GenomeComp:
         clusters = set()
 
         for feature in record.features:
-            gene = "-"
-            product = "-"
             if "locus_tag" in feature.qualifiers:
                 seqid = feature.qualifiers["locus_tag"][0]
             elif "protein_id" in feature.qualifiers:
@@ -780,8 +770,6 @@ class GenomeComp:
         Determine the number of shared OG between pairs of genome
         Calculate jaccard distance
         """
-        from itertools import combinations
-
         # {"subset_record": subset_record,
         #        "seq":seq,
         #        "basename": basename,
@@ -863,12 +851,6 @@ class GenomeComp:
 
 
 if __name__ == "__main__":
-    import argparse
-    import re
-    import sys
-
-    from Bio import SeqIO
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-a", "--input_table", type=str, help="input table, one reference per line"
