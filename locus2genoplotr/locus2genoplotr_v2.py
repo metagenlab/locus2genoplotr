@@ -380,7 +380,6 @@ class GenomeComp:
 
         # Search for the feature with the specified locus_tag or protein_id
         feature = None
-        flip = False
         for record in seqrecords:
             for f in record.features:
                 if (
