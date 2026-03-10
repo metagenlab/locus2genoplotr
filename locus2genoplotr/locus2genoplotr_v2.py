@@ -8,18 +8,15 @@ import re
 import shutil
 import subprocess
 import sys
-import tempfile
 from collections import Counter
 from itertools import chain
 from itertools import combinations
 from pathlib import Path
 
 import pandas
-from Bio import SeqFeature
 from Bio import SeqIO
 from Bio import SeqRecord
 from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
 from pygenomeviz import GenomeViz
 from TPutils import blast_utils
 
